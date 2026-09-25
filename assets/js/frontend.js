@@ -121,7 +121,7 @@
 				}
 
 				function createPriceNodes(amountText) {
-					var $currencySpan = $('<span class="woocommerce-Price-currencySymbol wdaa-currency"></span>').text(currency);
+					var $currencySpan = $('<span class="woocommerce-Price-currencySymbol wdaa-currency"><svg class="wdaa-toman-icon w-4 h-4" aria-hidden="true"><use href="#toman-icon" xlink:href="#toman-icon"></use></svg></span>');
 					var $amountSpan = $('<span class="wdaa-amount"></span>').text(amountText);
 					return [$currencySpan, $amountSpan];
 				}

@@ -194,13 +194,24 @@ table.variations tr.wdaa-table-row td {
 }
 
 /* Smaller SVG currency icon inside pill buttons */
+.wdaa-toman-icon {
+	width: 16px !important;
+	height: 16px !important;
+	max-width: 16px !important;
+	max-height: 16px !important;
+	display: inline-block !important;
+	vertical-align: middle !important;
+	flex-shrink: 0;
+}
+
 .wdaa-pill-price svg,
+.wdaa-pill-price .wdaa-toman-icon,
 .wdaa-pill-price .woocommerce-Price-currencySymbol svg,
 .wdaa-pill-price .wdaa-currency svg {
-	width: 11px !important;
-	height: 11px !important;
-	max-width: 11px !important;
-	max-height: 11px !important;
+	width: 12px !important;
+	height: 12px !important;
+	max-width: 12px !important;
+	max-height: 12px !important;
 	display: inline-block !important;
 	vertical-align: middle !important;
 }
@@ -267,7 +278,20 @@ table.variations tr.wdaa-table-row td {
 	font-size: 16px !important;
 	font-weight: 600 !important;
 	line-height: 1 !important;
+	display: inline-flex !important;
+	align-items: center !important;
 	color: rgb(150 159 174 / var(--tw-text-opacity, 1)) !important;
+}
+
+.wdaa-live-price-notice svg,
+.wdaa-live-price-notice .wdaa-toman-icon,
+.wdaa-price-display svg {
+	width: 18px !important;
+	height: 18px !important;
+	max-width: 18px !important;
+	max-height: 18px !important;
+	display: inline-block !important;
+	vertical-align: middle !important;
 }
 
 /* Backwards compatibility for single wrappers if any */

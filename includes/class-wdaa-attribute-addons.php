@@ -64,6 +64,7 @@ class WDAA_Attribute_Addons {
 
 		// 5. Cart: Display custom options under product title
 		add_filter( 'woocommerce_get_item_data', array( $this, 'display_cart_item_data' ), 10, 2 );
+		add_filter( 'wp_kses_allowed_html', array( $this, 'allow_svg_in_kses' ), 10, 2 );
 
 		// 6. Cart & Checkout: Add separate fee line for selected addon
 		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'calculate_addon_fees' ), 20, 1 );
@@ -364,7 +365,67 @@ class WDAA_Attribute_Addons {
 	}
 
 	/**
-	 * Return clean plain-text currency label even when the active theme replaces get_woocommerce_currency_symbol() with an inline <svg> icon
+	 * Return the host's #toman-icon SVG markup for currency symbol display
+	 *
+	 * @return string
+	*/
+	private static function get_toman_svg_markup() {
+		return '<svg class="wdaa-toman-icon w-4 h-4" aria-hidden="true"><use href="#toman-icon" xlink:href="#toman-icon"></use></svg>';
+	}
+
+	/**
+	 * Return allowed HTML tags for wp_kses() including <svg> and <use> for #toman-icon
+	 *
+	 * @return array
+	 */
+	private static function get_allowed_price_html() {
+		$allowed        = wp_kses_allowed_html( 'post' );
+		$allowed['svg'] = array(
+			'class'       => true,
+			'width'       => true,
+			'height'      => true,
+			'viewbox'     => true,
+			'fill'        => true,
+			'aria-hidden' => true,
+			'role'        => true,
+			'xmlns'       => true,
+		);
+		$allowed['use'] = array(
+			'href'       => true,
+			'xlink:href' => true,
+		);
+		return $allowed;
+	}
+
+	/**
+	 * Allow <svg> and <use> tags in wp_kses_post context so WooCommerce cart/checkout templates render #toman-icon SVG
+	 *
+	 * @param array  $tags    Allowed tags.
+	 * @param string $context Context name.
+	 * @return array
+	 */
+	public function allow_svg_in_kses( $tags, $context ) {
+		if ( 'post' === $context ) {
+			$tags['svg'] = array(
+				'class'       => true,
+				'width'       => true,
+				'height'      => true,
+				'viewbox'     => true,
+				'fill'        => true,
+				'aria-hidden' => true,
+				'role'        => true,
+				'xmlns'       => true,
+			);
+			$tags['use'] = array(
+				'href'       => true,
+				'xlink:href' => true,
+			);
+		}
+		return $tags;
+	}
+
+	/**
+	 * Return clean plain-text currency label for admin tables and plain-text order meta
 	 *
 	 * @return string
 	 */
@@ -685,7 +746,7 @@ class WDAA_Attribute_Addons {
 							if ( $term_item['extra_price'] > 0 ) {
 								$price_badge = sprintf(
 									'<span class="wdaa-pill-price"><span class="woocommerce-Price-currencySymbol wdaa-currency">%s</span><span class="wdaa-pill-amount">%s+</span></span>',
-									esc_html( self::get_clean_currency_label() ),
+									self::get_toman_svg_markup(),
 									esc_html( number_format_i18n( (float) $term_item['extra_price'] ) )
 								);
 							}
@@ -699,7 +760,7 @@ class WDAA_Attribute_Addons {
 									   <?php checked( $is_first, true ); ?>>
 								<span class="wdaa-pill-label">
 									<span class="wdaa-pill-name"><?php echo esc_html( $term_item['name'] ); ?></span>
-									<?php echo wp_kses_post( $price_badge ); ?>
+									<?php echo wp_kses( $price_badge, self::get_allowed_price_html() ); ?>
 								</span>
 							</label>
 							<?php
@@ -802,14 +863,14 @@ class WDAA_Attribute_Addons {
 	public function display_cart_item_data( $item_data, $cart_item ) {
 		if ( ! empty( $cart_item['wdaa_addons'] ) && is_array( $cart_item['wdaa_addons'] ) ) {
 			foreach ( $cart_item['wdaa_addons'] as $addon ) {
-				$display_value = (string) $addon['term_name'];
+				$display_value = esc_html( (string) $addon['term_name'] );
 				if ( $addon['extra_price'] > 0 ) {
-					$display_value .= ' (+' . number_format_i18n( (float) $addon['extra_price'] ) . ' ' . self::get_clean_currency_label() . ')';
+					$display_value .= ' (+' . esc_html( number_format_i18n( (float) $addon['extra_price'] ) ) . ' ' . self::get_toman_svg_markup() . ')';
 				}
 
 				$item_data[] = array(
 					'key'   => esc_html( $addon['tax_label'] ),
-					'value' => esc_html( $display_value ),
+					'value' => wp_kses( $display_value, self::get_allowed_price_html() ),
 				);
 			}
 		}
