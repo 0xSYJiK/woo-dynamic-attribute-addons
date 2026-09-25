@@ -268,7 +268,7 @@ class WDAA_Attribute_Addons {
      * Admin: Add custom column in term table
      */
     public function add_term_table_column( $columns ) {
-        $columns['wdaa_extra_price'] = __( 'هزینه اضافی', 'wdaa' );
+        $columns['wdaa_extra_price'] = esc_html__( 'هزینه اضافی', 'wdaa' );
         return $columns;
     }
 
@@ -642,14 +642,15 @@ class WDAA_Attribute_Addons {
     public function display_cart_item_data( $item_data, $cart_item ) {
         if ( ! empty( $cart_item['wdaa_addons'] ) && is_array( $cart_item['wdaa_addons'] ) ) {
             foreach ( $cart_item['wdaa_addons'] as $addon ) {
-                $display_value = esc_html( $addon['term_name'] );
+                $display_value = (string) $addon['term_name'];
                 if ( $addon['extra_price'] > 0 ) {
-                    $display_value .= ' (+' . esc_html( number_format_i18n( (float) $addon['extra_price'] ) ) . ' ' . esc_html( get_woocommerce_currency_symbol() ) . ')';
+                    $currency_symbol = wp_strip_all_tags( html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8' ) );
+                    $display_value  .= ' (+' . number_format_i18n( (float) $addon['extra_price'] ) . ' ' . $currency_symbol . ')';
                 }
 
                 $item_data[] = array(
                     'key'   => esc_html( $addon['tax_label'] ),
-                    'value' => wp_kses_post( $display_value ),
+                    'value' => esc_html( $display_value ),
                 );
             }
         }
@@ -678,7 +679,7 @@ class WDAA_Attribute_Addons {
                 foreach ( $cart_item['wdaa_addons'] as $addon ) {
                     if ( ! empty( $addon['extra_price'] ) && $addon['extra_price'] > 0 ) {
                         // Title for the separate fee row in invoice
-                        $fee_title = sprintf( __( 'هزینه %s', 'wdaa' ), $addon['term_name'] );
+                        $fee_title = esc_html( sprintf( esc_html__( 'هزینه %s', 'wdaa' ), sanitize_text_field( (string) $addon['term_name'] ) ) );
 
                         if ( ! isset( $fees_to_add[ $fee_title ] ) ) {
                             $fees_to_add[ $fee_title ] = 0;
@@ -854,7 +855,7 @@ class WDAA_Attribute_Addons {
                             ?>
                         </tbody>
                     </table>
-                    <?php submit_button( __( 'ذخیره تغییرات ویژگی‌ها', 'wdaa' ), 'primary', 'submit', false ); ?>
+                    <?php submit_button( esc_html__( 'ذخیره تغییرات ویژگی‌ها', 'wdaa' ), 'primary', 'submit', false ); ?>
                 </form>
             </div>
 
