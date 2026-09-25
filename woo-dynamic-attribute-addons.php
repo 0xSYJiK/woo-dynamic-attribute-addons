@@ -161,9 +161,13 @@ class WDAA_Attribute_Addons {
      * Hook into WooCommerce attribute taxonomies (pa_*) only on relevant taxonomy screens and AJAX actions
      */
     public function register_taxonomy_hooks() {
+        if ( ! current_user_can( 'manage_product_terms' ) ) {
+            return;
+        }
+
         global $pagenow;
 
-        $action        = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
+        $action        = ( isset( $_REQUEST['action'] ) && is_string( $_REQUEST['action'] ) ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
         $is_tax_screen = in_array( $pagenow, array( 'edit-tags.php', 'term.php' ), true );
         $is_tax_ajax   = ( 'admin-ajax.php' === $pagenow && in_array( $action, array( 'add-tag', 'inline-save-tax' ), true ) );
 
