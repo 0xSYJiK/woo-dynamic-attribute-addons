@@ -253,13 +253,23 @@ class WDAA_Attribute_Addons {
 			return;
 		}
 
+		$active_tax = '';
+		if ( $screen instanceof WP_Screen && ! empty( $screen->taxonomy ) ) {
+			$active_tax = $screen->taxonomy;
+		} elseif ( isset( $_REQUEST['taxonomy'] ) && is_string( $_REQUEST['taxonomy'] ) ) {
+			$active_tax = sanitize_text_field( wp_unslash( $_REQUEST['taxonomy'] ) );
+		}
+
 		foreach ( $attribute_taxonomies as $tax ) {
 			$taxonomy = wc_attribute_taxonomy_name( $tax->attribute_name );
-			
+			if ( '' !== $active_tax && $taxonomy !== $active_tax && wc_sanitize_taxonomy_name( $taxonomy ) !== wc_sanitize_taxonomy_name( $active_tax ) ) {
+				continue;
+			}
+
 			// Add custom field to term create & edit forms
 			add_action( "{$taxonomy}_add_form_fields", array( $this, 'render_add_term_field' ) );
 			add_action( "{$taxonomy}_edit_form_fields", array( $this, 'render_edit_term_field' ), 10, 2 );
-			
+
 			// Save term meta
 			add_action( "created_{$taxonomy}", array( $this, 'save_term_extra_price' ) );
 			add_action( "edited_{$taxonomy}", array( $this, 'save_term_extra_price' ) );
