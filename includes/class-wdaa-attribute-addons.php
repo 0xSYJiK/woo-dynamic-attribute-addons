@@ -94,6 +94,10 @@ class WDAA_Attribute_Addons {
 	 * Admin: Register settings via WordPress Settings API
 	 */
 	public function register_plugin_settings() {
+		if ( wp_doing_ajax() ) {
+			return;
+		}
+
 		register_setting(
 			'wdaa_settings_group',
 			'wdaa_enabled_addons',
@@ -107,6 +111,11 @@ class WDAA_Attribute_Addons {
 		add_filter( 'option_page_capability_wdaa_settings_group', function() {
 			return 'manage_woocommerce';
 		} );
+
+		$current_page = ( isset( $_GET['page'] ) && is_string( $_GET['page'] ) ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+		if ( 'wdaa-settings' !== $current_page ) {
+			return;
+		}
 
 		add_settings_section(
 			'wdaa_addons_section',
