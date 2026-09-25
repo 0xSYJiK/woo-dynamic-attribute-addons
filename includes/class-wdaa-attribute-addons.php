@@ -84,7 +84,7 @@ class WDAA_Attribute_Addons {
 		self::$enabled_addons_map = null;
 		delete_transient( 'wdaa_priced_terms_list' );
 		$ver = (int) get_option( 'wdaa_cache_version', 1 );
-		update_option( 'wdaa_cache_version', $ver + 1, false );
+		update_option( 'wdaa_cache_version', $ver + 1, true );
 		if ( function_exists( 'wp_cache_flush_group' ) ) {
 			wp_cache_flush_group( 'wdaa' );
 		}
