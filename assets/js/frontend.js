@@ -69,14 +69,7 @@
 			}
 
 			var $resetTr = $form.find('tr.woocommerce_reset_variations_link_tr');
-			if (!$resetTr.length) {
-				$resetTr = $('tr.woocommerce_reset_variations_link_tr');
-			}
-
 			var $resetBtn = $form.find('.reset_variations');
-			if (!$resetBtn.length) {
-				$resetBtn = $('.reset_variations');
-			}
 
 			if ($resetTr.length && $resetTr.parent().is('tbody, table')) {
 				var $newTr = $('<tr id="wdaa-table-row" class="wdaa-table-row"><td colspan="10" class="wdaa-table-cell"></td></tr>');
@@ -178,9 +171,6 @@
 		// Manage reset variations button ("صاف") visibility and zero-space collapse
 		function syncResetButton() {
 			var $resetBtn = $form.find('.reset_variations');
-			if (!$resetBtn.length) {
-				$resetBtn = $('.reset_variations');
-			}
 			if (!$resetBtn.length) return;
 
 			var $resetTr = $resetBtn.closest('tr.woocommerce_reset_variations_link_tr, tr');
@@ -244,6 +234,12 @@
 
 		// WooCommerce Variable Product Events
 		if (isVariable) {
+			$form.on('wc_variation_form', function () {
+				repositionMasterBox();
+				syncResetButton();
+				updateLivePriceDisplay();
+			});
+
 			$form.on('show_variation', function (event, variation) {
 				syncResetButton();
 				if (variation && typeof variation.display_price !== 'undefined') {
@@ -271,11 +267,5 @@
 		repositionMasterBox();
 		syncResetButton();
 		updateLivePriceDisplay();
-
-		setTimeout(function () {
-			repositionMasterBox();
-			syncResetButton();
-			updateLivePriceDisplay();
-		}, 120);
 	});
 })(jQuery);
