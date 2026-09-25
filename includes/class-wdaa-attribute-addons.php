@@ -364,13 +364,31 @@ class WDAA_Attribute_Addons {
 	}
 
 	/**
+	 * Return clean plain-text currency label even when the active theme replaces get_woocommerce_currency_symbol() with an inline <svg> icon
+	 *
+	 * @return string
+	 */
+	private static function get_clean_currency_label() {
+		$raw_symbol = get_woocommerce_currency_symbol();
+		$clean      = trim( wp_strip_all_tags( wp_specialchars_decode( (string) $raw_symbol, ENT_QUOTES ) ) );
+		if ( '' === $clean || false !== stripos( (string) $raw_symbol, '<svg' ) ) {
+			$currency = function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : 'IRT';
+			if ( 'IRR' === $currency ) {
+				return __( 'ریال', 'wdaa' );
+			}
+			return __( 'تومان', 'wdaa' );
+		}
+		return $clean;
+	}
+
+	/**
 	 * Admin: Display extra price in term table column
 	 */
 	public function render_term_table_column( $content, $column_name, $term_id ) {
 		if ( 'wdaa_extra_price' === $column_name ) {
 			$price = get_term_meta( $term_id, '_wdaa_extra_price', true );
 			if ( ! empty( $price ) && (float) $price > 0 ) {
-				return '<strong class="wdaa-term-price-active">+' . esc_html( number_format_i18n( (float) $price ) ) . ' ' . esc_html( get_woocommerce_currency_symbol() ) . '</strong>';
+				return '<strong class="wdaa-term-price-active">+' . esc_html( number_format_i18n( (float) $price ) ) . ' ' . esc_html( self::get_clean_currency_label() ) . '</strong>';
 			}
 			return '<span class="wdaa-term-price-empty">—</span>';
 		}
@@ -409,9 +427,8 @@ class WDAA_Attribute_Addons {
 		);
 
 		// Pass currency symbol, price formatting, and translated labels to JS via wp_add_inline_script
-		$raw_currency = wp_specialchars_decode( get_woocommerce_currency_symbol(), ENT_QUOTES );
-		$script_data  = array(
-			'currency_symbol'        => esc_html( wp_strip_all_tags( $raw_currency ) ),
+		$script_data = array(
+			'currency_symbol'        => esc_html( self::get_clean_currency_label() ),
 			'price_format'           => esc_html( get_woocommerce_price_format() ),
 			'thousand_sep'           => esc_html( wc_get_price_thousand_separator() ),
 			'decimal_sep'            => esc_html( wc_get_price_decimal_separator() ),
@@ -668,7 +685,7 @@ class WDAA_Attribute_Addons {
 							if ( $term_item['extra_price'] > 0 ) {
 								$price_badge = sprintf(
 									'<span class="wdaa-pill-price"><span class="woocommerce-Price-currencySymbol wdaa-currency">%s</span><span class="wdaa-pill-amount">%s+</span></span>',
-									esc_html( get_woocommerce_currency_symbol() ),
+									esc_html( self::get_clean_currency_label() ),
 									esc_html( number_format_i18n( (float) $term_item['extra_price'] ) )
 								);
 							}
@@ -787,8 +804,7 @@ class WDAA_Attribute_Addons {
 			foreach ( $cart_item['wdaa_addons'] as $addon ) {
 				$display_value = (string) $addon['term_name'];
 				if ( $addon['extra_price'] > 0 ) {
-					$currency_symbol = wp_strip_all_tags( wp_specialchars_decode( get_woocommerce_currency_symbol(), ENT_QUOTES ) );
-					$display_value  .= ' (+' . number_format_i18n( (float) $addon['extra_price'] ) . ' ' . $currency_symbol . ')';
+					$display_value .= ' (+' . number_format_i18n( (float) $addon['extra_price'] ) . ' ' . self::get_clean_currency_label() . ')';
 				}
 
 				$item_data[] = array(
@@ -851,7 +867,7 @@ class WDAA_Attribute_Addons {
 				$meta_key   = isset( $addon['tax_label'] ) ? sanitize_text_field( wp_strip_all_tags( (string) $addon['tax_label'] ) ) : '';
 				$meta_value = isset( $addon['term_name'] ) ? sanitize_text_field( wp_strip_all_tags( (string) $addon['term_name'] ) ) : '';
 				if ( ! empty( $addon['extra_price'] ) && (float) $addon['extra_price'] > 0 ) {
-					$currency_symbol = sanitize_text_field( wp_strip_all_tags( wp_specialchars_decode( get_woocommerce_currency_symbol(), ENT_QUOTES ) ) );
+					$currency_symbol = sanitize_text_field( self::get_clean_currency_label() );
 					$meta_value     .= ' (+' . number_format_i18n( (float) $addon['extra_price'] ) . ' ' . $currency_symbol . ')';
 				}
 				if ( '' !== $meta_key && '' !== $meta_value ) {
@@ -993,7 +1009,7 @@ class WDAA_Attribute_Addons {
 								<tr>
 									<td><?php echo esc_html( $item['attribute_label'] ); ?></td>
 									<td><strong><?php echo esc_html( $item['term_name'] ); ?></strong></td>
-									<td class="wdaa-priced-amount">+<?php echo esc_html( number_format_i18n( (float) $item['price'] ) ); ?> <?php echo esc_html( get_woocommerce_currency_symbol() ); ?></td>
+									<td class="wdaa-priced-amount">+<?php echo esc_html( number_format_i18n( (float) $item['price'] ) ); ?> <?php echo esc_html( self::get_clean_currency_label() ); ?></td>
 									<td><a href="<?php echo esc_url( $edit_url ); ?>" class="button button-small"><?php esc_html_e( 'ویرایش', 'wdaa' ); ?></a></td>
 								</tr>
 								<?php
