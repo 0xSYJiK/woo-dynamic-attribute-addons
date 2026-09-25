@@ -314,7 +314,7 @@ class WDAA_Attribute_Addons {
         );
 
         // Pass currency symbol, price formatting, and translated labels to JS
-        $raw_currency = html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8' );
+        $raw_currency = wp_specialchars_decode( get_woocommerce_currency_symbol(), ENT_QUOTES );
         wp_localize_script( 'wdaa-frontend-script', 'wdaa_vars', array(
             'currency_symbol'        => esc_html( wp_strip_all_tags( $raw_currency ) ),
             'price_format'           => esc_html( get_woocommerce_price_format() ),
@@ -648,7 +648,7 @@ class WDAA_Attribute_Addons {
             foreach ( $cart_item['wdaa_addons'] as $addon ) {
                 $display_value = (string) $addon['term_name'];
                 if ( $addon['extra_price'] > 0 ) {
-                    $currency_symbol = wp_strip_all_tags( html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8' ) );
+                    $currency_symbol = wp_strip_all_tags( wp_specialchars_decode( get_woocommerce_currency_symbol(), ENT_QUOTES ) );
                     $display_value  .= ' (+' . number_format_i18n( (float) $addon['extra_price'] ) . ' ' . $currency_symbol . ')';
                 }
 
@@ -712,7 +712,7 @@ class WDAA_Attribute_Addons {
                 $meta_key   = isset( $addon['tax_label'] ) ? sanitize_text_field( wp_strip_all_tags( (string) $addon['tax_label'] ) ) : '';
                 $meta_value = isset( $addon['term_name'] ) ? sanitize_text_field( wp_strip_all_tags( (string) $addon['term_name'] ) ) : '';
                 if ( ! empty( $addon['extra_price'] ) && (float) $addon['extra_price'] > 0 ) {
-                    $currency_symbol = sanitize_text_field( wp_strip_all_tags( html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8' ) ) );
+                    $currency_symbol = sanitize_text_field( wp_strip_all_tags( wp_specialchars_decode( get_woocommerce_currency_symbol(), ENT_QUOTES ) ) );
                     $meta_value     .= ' (+' . number_format_i18n( (float) $addon['extra_price'] ) . ' ' . $currency_symbol . ')';
                 }
                 if ( '' !== $meta_key && '' !== $meta_value ) {
