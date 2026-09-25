@@ -540,13 +540,18 @@ class WDAA_Attribute_Addons {
             return $cart_item_data;
         }
 
-        $raw_options       = wp_unslash( $_POST['wdaa_option'] );
+        $raw_options       = map_deep( wp_unslash( $_POST['wdaa_option'] ), 'sanitize_text_field' );
         $selected_addons   = array();
         $total_extra_price = 0;
         $product_id        = absint( $product_id );
+        $variation_id      = absint( $variation_id );
         $has_saved_config  = is_array( get_option( 'wdaa_enabled_addons', null ) );
 
         foreach ( $raw_options as $taxonomy => $term_id ) {
+            if ( ! is_scalar( $term_id ) || ! is_string( $taxonomy ) ) {
+                continue;
+            }
+
             $term_id  = absint( $term_id );
             $tax_name = sanitize_text_field( $taxonomy );
 
