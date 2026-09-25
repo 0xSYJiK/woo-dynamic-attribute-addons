@@ -121,12 +121,21 @@ class WDAA_Attribute_Addons {
                 'default'           => array(),
             )
         );
+
+        add_filter( 'option_page_capability_wdaa_settings_group', function() {
+            return 'manage_woocommerce';
+        } );
     }
 
     /**
      * Sanitize callback for wdaa_enabled_addons option
      */
     public function sanitize_enabled_addons( $input ) {
+        if ( ! current_user_can( 'manage_woocommerce' ) ) {
+            $existing = get_option( 'wdaa_enabled_addons', array() );
+            return is_array( $existing ) ? $existing : array();
+        }
+
         $this->bump_cache_version();
         if ( ! is_array( $input ) ) {
             return array();
