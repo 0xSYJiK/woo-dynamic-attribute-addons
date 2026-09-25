@@ -14,7 +14,7 @@
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
-    exit; // Exit if accessed directly.
+	exit; // Exit if accessed directly.
 }
 
 define( 'WDAA_VERSION', '1.3.7' );
@@ -24,9 +24,9 @@ define( 'WDAA_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
 // Declare HPOS (High-Performance Order Storage) compatibility
 add_action( 'before_woocommerce_init', function() {
-    if ( class_exists( '\\Automattic\\WooCommerce\\Utilities\\FeaturesUtil' ) ) {
-        \\Automattic\\WooCommerce\\Utilities\\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
-    }
+	if ( class_exists( '\\Automattic\\WooCommerce\\Utilities\\FeaturesUtil' ) ) {
+		\\Automattic\\WooCommerce\\Utilities\\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+	}
 } );
 
 require_once WDAA_PLUGIN_DIR . 'includes/class-wdaa-attribute-addons.php';
