@@ -136,11 +136,15 @@ class WDAA_Attribute_Addons {
             return is_array( $existing ) ? $existing : array();
         }
 
-        $this->bump_cache_version();
         if ( ! is_array( $input ) ) {
             return array();
         }
-        return array_values( array_filter( array_map( 'sanitize_text_field', wp_unslash( $input ) ) ) );
+
+        $this->bump_cache_version();
+        $sanitized = map_deep( wp_unslash( $input ), 'sanitize_text_field' );
+        return array_values( array_filter( $sanitized, function( $item ) {
+            return is_string( $item ) && '' !== $item;
+        } ) );
     }
 
     /**
@@ -236,7 +240,12 @@ class WDAA_Attribute_Addons {
      * Admin: Save term extra price meta
      */
     public function save_term_extra_price( $term_id ) {
-        if ( ! isset( $_POST['wdaa_term_price_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['wdaa_term_price_nonce'] ) ), 'wdaa_save_term_price' ) ) {
+        $term_id = absint( $term_id );
+        if ( $term_id <= 0 ) {
+            return;
+        }
+
+        if ( ! isset( $_POST['wdaa_term_price_nonce'] ) || ! is_string( $_POST['wdaa_term_price_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['wdaa_term_price_nonce'] ) ), 'wdaa_save_term_price' ) ) {
             return;
         }
 
@@ -244,7 +253,7 @@ class WDAA_Attribute_Addons {
             return;
         }
 
-        if ( isset( $_POST['wdaa_extra_price'] ) ) {
+        if ( isset( $_POST['wdaa_extra_price'] ) && is_string( $_POST['wdaa_extra_price'] ) ) {
             $price = sanitize_text_field( wp_unslash( $_POST['wdaa_extra_price'] ) );
             if ( '' === $price || ! is_numeric( $price ) || (float) $price <= 0 ) {
                 delete_term_meta( $term_id, '_wdaa_extra_price' );
