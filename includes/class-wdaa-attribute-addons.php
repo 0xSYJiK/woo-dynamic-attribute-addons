@@ -214,7 +214,13 @@ class WDAA_Attribute_Addons {
 	 * Admin: Enqueue admin CSS on plugin and attribute term screens
 	 */
 	public function enqueue_admin_assets( $hook_suffix ) {
-		if ( in_array( $hook_suffix, array( 'woocommerce_page_wdaa-settings', 'edit-tags.php', 'term.php' ), true ) ) {
+		$should_enqueue = ( 'woocommerce_page_wdaa-settings' === $hook_suffix );
+		if ( ! $should_enqueue && in_array( $hook_suffix, array( 'edit-tags.php', 'term.php' ), true ) ) {
+			$screen         = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+			$should_enqueue = ( $screen instanceof WP_Screen ) && ! empty( $screen->taxonomy ) && function_exists( 'taxonomy_is_product_attribute' ) && taxonomy_is_product_attribute( $screen->taxonomy );
+		}
+
+		if ( $should_enqueue ) {
 			wp_enqueue_style(
 				'wdaa-admin-style',
 				WDAA_PLUGIN_URL . 'assets/css/admin.css',
@@ -370,6 +376,11 @@ class WDAA_Attribute_Addons {
 			return;
 		}
 
+		$product_id = get_queried_object_id();
+		if ( $product_id <= 0 || empty( $this->get_product_addon_sections( $product_id ) ) ) {
+			return;
+		}
+
 		wp_enqueue_style(
 			'wdaa-frontend-style',
 			WDAA_PLUGIN_URL . 'assets/css/frontend.css',
@@ -382,7 +393,10 @@ class WDAA_Attribute_Addons {
 			WDAA_PLUGIN_URL . 'assets/js/frontend.js',
 			array( 'jquery', 'accounting' ),
 			WDAA_VERSION,
-			true
+			array(
+				'in_footer' => true,
+				'strategy'  => 'defer',
+			)
 		);
 
 		// Pass currency symbol, price formatting, and translated labels to JS via wp_add_inline_script
