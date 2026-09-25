@@ -1,0 +1,96 @@
+/**
+ * WooCommerce Dynamic Attribute Add-ons - Admin Styles
+ */
+
+.wdaa-price-input {
+    direction: ltr;
+    text-align: right;
+}
+
+.wdaa-price-input-edit {
+    direction: ltr;
+    text-align: right;
+    width: 220px;
+}
+
+.wdaa-term-price-active {
+    color: #0073aa;
+}
+
+.wdaa-term-price-empty {
+    color: #999999;
+}
+
+.wdaa-admin-wrap {
+    max-width: 900px;
+    font-family: inherit;
+}
+
+.wdaa-admin-title {
+    margin-bottom: 20px;
+}
+
+.wdaa-admin-card {
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 25px;
+    max-width: 100%;
+}
+
+.wdaa-admin-card-last {
+    margin-bottom: 0;
+}
+
+.wdaa-admin-card-title {
+    margin-top: 0;
+    color: #1d2327;
+}
+
+.wdaa-admin-card-desc {
+    color: #64748b;
+    font-size: 13px;
+    margin-bottom: 15px;
+}
+
+.wdaa-admin-table {
+    margin-bottom: 15px;
+}
+
+.wdaa-admin-table-spaced {
+    margin-top: 15px;
+}
+
+.wdaa-col-active {
+    width: 50px;
+    text-align: center;
+}
+
+.wdaa-cell-center {
+    text-align: center;
+}
+
+.wdaa-status-enabled {
+    color: #00a27e;
+    font-weight: 600;
+}
+
+.wdaa-status-disabled {
+    color: #94a3b8;
+}
+
+.wdaa-guide-list {
+    line-height: 2;
+    font-size: 14px;
+}
+
+.wdaa-priced-amount {
+    color: #27ae60;
+    font-weight: bold;
+}
+
+.wdaa-empty-row {
+    text-align: center;
+    color: #888888;
+    padding: 20px !important;
+}

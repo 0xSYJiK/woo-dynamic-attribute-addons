@@ -1,0 +1,339 @@
+/**
+ * WooCommerce Dynamic Attribute Add-ons - Frontend Styles (RTL Friendly)
+ */
+
+/* Remove bottom margin on theme's variation attribute rows */
+table.variations tr,
+table.variations tbody tr,
+.box-price-info-single table.variations tr,
+.box-price-info-single form.variations_form table.variations tbody tr,
+form.variations_form table.variations tr,
+form.variations_form table.variations tbody tr,
+.variations_form table.variations tr {
+    margin-bottom: 0 !important;
+}
+
+/* Table Row inside table.variations for Add-ons */
+tr.wdaa-table-row,
+table.variations tr.wdaa-table-row {
+    background: transparent !important;
+    border: none !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
+
+tr.wdaa-table-row td,
+table.variations tr.wdaa-table-row td {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    width: 100% !important;
+    display: table-cell !important;
+}
+
+/* Master Single Box for all Add-ons */
+.wdaa-master-box {
+    margin: 6px 0 !important;
+    padding: 14px 16px;
+    background: #ffffff;
+    border: 1px solid #e9edf2 !important;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    font-family: inherit;
+    direction: rtl;
+    text-align: right;
+    box-sizing: border-box;
+    width: 100%;
+    color: rgb(40, 49, 59) !important;
+}
+
+/* Individual Add-on Row */
+.wdaa-addon-row {
+    margin: 0;
+}
+
+/* Divider between sections (e.g. between Base and Color) */
+.wdaa-addon-divider {
+    height: 1px;
+    margin: 12px 0;
+    border: none;
+    border-top: 1px dashed #e9edf2;
+}
+
+.wdaa-attribute-header {
+    margin-bottom: 8px;
+}
+
+.wdaa-attribute-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: rgb(40, 49, 59) !important;
+    display: inline-block;
+}
+
+.wdaa-pills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Individual Pill Option */
+.wdaa-pill-item {
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    margin: 0;
+    display: inline-block;
+}
+
+/* Hide native radio input but keep it accessible */
+.wdaa-pill-item input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    margin: 0;
+    pointer-events: none;
+}
+
+/* Pill Box Label (Default State - rgb(40, 49, 59)) */
+.wdaa-pill-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background-color: #ffffff;
+    border: 2px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgb(40, 49, 59) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.wdaa-pill-name {
+    display: inline-block;
+    white-space: nowrap;
+    color: rgb(40, 49, 59) !important;
+}
+
+.wdaa-pill-item:hover .wdaa-pill-label {
+    border-color: #94a3b8;
+    background-color: #f8fafc;
+    color: rgb(40, 49, 59) !important;
+    transform: translateY(-1px);
+}
+
+/* Selected Active State with Brand Color #00a27e */
+.wdaa-pill-item.is-selected .wdaa-pill-label,
+.wdaa-pill-item input[type="radio"]:checked + .wdaa-pill-label {
+    border-color: #00a27e !important;
+    background-color: #f0fdf9 !important;
+    color: #00a27e !important;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0, 162, 126, 0.15);
+}
+
+.wdaa-pill-item.is-selected .wdaa-pill-name {
+    color: #00a27e !important;
+}
+
+/* Extra Price Badge (Currency on Left Side) */
+.wdaa-pill-price {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 2px !important;
+    white-space: nowrap;
+    padding: 2px 8px;
+    background-color: #e6f6f2;
+    color: #00a27e;
+    border-radius: 20px;
+    font-size: 14px !important;
+    font-weight: 700;
+    line-height: 1.2;
+    direction: ltr !important;
+}
+
+.wdaa-pill-amount {
+    display: inline-block;
+    font-size: 14px !important;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.wdaa-price-display {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 2px !important;
+    direction: ltr !important;
+}
+
+.wdaa-pill-item.is-selected .wdaa-pill-price {
+    background-color: #00a27e;
+    color: #ffffff;
+}
+
+/* Currency Symbol & Toman Icon Styling */
+.wdaa-currency,
+.wdaa-pill-price .woocommerce-Price-currencySymbol,
+.wdaa-pill-price svg,
+.wdaa-live-price-notice .woocommerce-Price-currencySymbol,
+.wdaa-live-price-notice svg,
+.woocommerce-Price-currencySymbol {
+    --tw-text-opacity: 1;
+    color: rgb(150 159 174 / var(--tw-text-opacity, 1)) !important;
+    fill: rgb(150 159 174 / var(--tw-text-opacity, 1)) !important;
+}
+
+/* Smaller SVG currency icon inside pill buttons */
+.wdaa-pill-price svg,
+.wdaa-pill-price .woocommerce-Price-currencySymbol svg,
+.wdaa-pill-price .wdaa-currency svg {
+    width: 11px !important;
+    height: 11px !important;
+    max-width: 11px !important;
+    max-height: 11px !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+}
+
+/* Text currency symbol size inside pill buttons */
+.wdaa-pill-price .woocommerce-Price-currencySymbol,
+.wdaa-pill-price .wdaa-currency {
+    font-size: 11px !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+.wdaa-pill-item.is-selected .wdaa-pill-price .woocommerce-Price-currencySymbol,
+.wdaa-pill-item.is-selected .wdaa-pill-price svg,
+.wdaa-pill-item.is-selected .wdaa-pill-price .wdaa-currency {
+    color: #e6f6f2 !important;
+    fill: #e6f6f2 !important;
+}
+
+/* Live Total Notice at bottom of the master box */
+.wdaa-live-price-notice {
+    margin-top: 14px;
+    font-size: 13px;
+    color: rgb(40, 49, 59) !important;
+    border-top: 1px dashed #e9edf2;
+    padding-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.4;
+}
+
+.wdaa-live-price-notice > span {
+    color: rgb(40, 49, 59) !important;
+    font-size: 13.5px;
+    font-weight: 600;
+}
+
+.wdaa-live-price-notice strong,
+.wdaa-live-price-notice .wdaa-price-display {
+    color: rgb(40, 49, 59) !important;
+    font-size: 30px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: baseline !important;
+    gap: 6px !important;
+    white-space: nowrap;
+}
+
+.wdaa-live-price-notice .wdaa-amount,
+.wdaa-live-price-notice .wdaa-price-amount {
+    font-size: 30px !important;
+    font-weight: 800 !important;
+    color: rgb(40, 49, 59) !important;
+    line-height: 1 !important;
+}
+
+.wdaa-live-price-notice .wdaa-currency,
+.wdaa-live-price-notice .woocommerce-Price-currencySymbol {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    color: rgb(150 159 174 / var(--tw-text-opacity, 1)) !important;
+}
+
+/* Backwards compatibility for single wrappers if any */
+.wdaa-attribute-wrapper {
+    margin: 14px 0;
+    padding: 12px 14px;
+    background: #ffffff;
+    border: 1px solid #e9edf2;
+    border-radius: 10px;
+    box-sizing: border-box;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .wdaa-pills-container {
+        flex-direction: row;
+        align-items: center;
+    }
+}
+
+/* ==========================================================================
+   RESET / CLEAR VARIATIONS BUTTON ("صاف") STYLING & ZERO-SPACE COLLAPSE
+   ========================================================================== */
+
+/* 1. When hidden (not needed), collapse completely to 0px */
+tr.woocommerce_reset_variations_link_tr.wdaa-hidden,
+.woocommerce_reset_variations_link_tr.wdaa-hidden,
+.variations_form .reset_variations.wdaa-hidden {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    line-height: 0 !important;
+    font-size: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+}
+
+/* 2. When active and visible (not wdaa-hidden), render with exact border and box style */
+.variations_form .reset_variations:not(.wdaa-hidden) {
+    border: 2px solid #f2bec0 !important;
+    border-radius: 6px !important;
+    width: 100% !important;
+    height: 42px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 15px !important;
+    color: #ea6a6f !important;
+    font-weight: 700 !important;
+    margin: 10px auto 16px !important;
+    text-decoration: none !important;
+    box-sizing: border-box !important;
+    background-color: #ffffff !important;
+    transition: border-color 0.2s ease, background-color 0.2s ease !important;
+}
+
+.variations_form .reset_variations:not(.wdaa-hidden):hover {
+    border-color: #ea6a6f !important;
+    background-color: #fff5f5 !important;
+    color: #ea6a6f !important;
+}
+
+
