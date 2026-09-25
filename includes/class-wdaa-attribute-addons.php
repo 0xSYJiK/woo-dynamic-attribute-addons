@@ -489,8 +489,9 @@ class WDAA_Attribute_Addons {
 		$addon_sections = wp_cache_get( $cache_key, 'wdaa' );
 
 		if ( false === $addon_sections && ! $use_ext_cache ) {
-			$addon_sections = get_transient( $cache_key );
-			if ( false !== $addon_sections && is_array( $addon_sections ) ) {
+			$meta_cache = get_post_meta( $product_id, '_wdaa_addons_cache', true );
+			if ( is_array( $meta_cache ) && isset( $meta_cache['ver'], $meta_cache['exp'], $meta_cache['data'] ) && (int) $meta_cache['ver'] === $cache_ver && (int) $meta_cache['exp'] > time() && is_array( $meta_cache['data'] ) ) {
+				$addon_sections = $meta_cache['data'];
 				wp_cache_set( $cache_key, $addon_sections, 'wdaa', HOUR_IN_SECONDS );
 			}
 		}
@@ -588,7 +589,15 @@ class WDAA_Attribute_Addons {
 
 			wp_cache_set( $cache_key, $addon_sections, 'wdaa', HOUR_IN_SECONDS );
 			if ( ! $use_ext_cache ) {
-				set_transient( $cache_key, $addon_sections, HOUR_IN_SECONDS );
+				update_post_meta(
+					$product_id,
+					'_wdaa_addons_cache',
+					array(
+						'ver'  => $cache_ver,
+						'exp'  => time() + HOUR_IN_SECONDS,
+						'data' => $addon_sections,
+					)
+				);
 			}
 		}
 
