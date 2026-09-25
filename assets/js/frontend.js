@@ -79,22 +79,22 @@
             }
 
             if ($resetTr.length && $resetTr.parent().is('tbody, table')) {
-                var $newTr = $('<tr id="wdaa-table-row" class="wdaa-table-row"><td colspan="10" style="padding:0; border:none;"></td></tr>');
+                var $newTr = $('<tr id="wdaa-table-row" class="wdaa-table-row"><td colspan="10" class="wdaa-table-cell"></td></tr>');
                 $newTr.find('td').append($masterBox);
                 $newTr.insertBefore($resetTr);
                 var prev = $newTr[0].previousElementSibling;
                 if (prev && prev.tagName === 'TR') {
-                    prev.style.setProperty('margin-bottom', '0px', 'important');
+                    $(prev).addClass('wdaa-prev-row-no-margin');
                 }
             } else if ($resetBtn.length) {
                 var $tr = $resetBtn.closest('tr');
                 if ($tr.length && $tr.parent().is('tbody, table')) {
-                    var $newTrFallback = $('<tr id="wdaa-table-row" class="wdaa-table-row"><td colspan="10" style="padding:0; border:none;"></td></tr>');
+                    var $newTrFallback = $('<tr id="wdaa-table-row" class="wdaa-table-row"><td colspan="10" class="wdaa-table-cell"></td></tr>');
                     $newTrFallback.find('td').append($masterBox);
                     $newTrFallback.insertBefore($tr);
                     var prevRow = $newTrFallback[0].previousElementSibling;
                     if (prevRow && prevRow.tagName === 'TR') {
-                        prevRow.style.setProperty('margin-bottom', '0px', 'important');
+                        $(prevRow).addClass('wdaa-prev-row-no-margin');
                     }
                 } else {
                     var $wrapper = $resetBtn.closest('.reset_variations_wrap, .wd-reset-var, .clear-filter-wrap, .clear-filters');
@@ -123,7 +123,7 @@
                 var totalExtra = getTotalExtraPrice();
                 var $notice = $masterBox.find('.wdaa-live-price-notice');
                 if (!$notice.length) {
-                    $notice = $('<div class="wdaa-live-price-notice" style="display:none;"></div>');
+                    $notice = $('<div class="wdaa-live-price-notice wdaa-hidden"></div>');
                     $masterBox.append($notice);
                 }
 
@@ -144,9 +144,9 @@
                             .append($('<span></span>').text(labelTotalWithAddons))
                             .append(' ')
                             .append($strongPrice)
-                            .show();
+                            .removeClass('wdaa-hidden');
                     } else {
-                        $notice.hide();
+                        $notice.addClass('wdaa-hidden');
                     }
 
                     // Update standard variation price container
@@ -165,9 +165,9 @@
                             .append($('<span></span>').text(labelAddonsCost))
                             .append(' ')
                             .append($extraStrong)
-                            .show();
+                            .removeClass('wdaa-hidden');
                     } else {
-                        $notice.hide();
+                        $notice.addClass('wdaa-hidden');
                     }
                 }
             } catch (err) {

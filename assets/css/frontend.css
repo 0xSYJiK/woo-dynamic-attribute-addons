@@ -336,4 +336,15 @@ tr.woocommerce_reset_variations_link_tr.wdaa-hidden,
     color: #ea6a6f !important;
 }
 
+.wdaa-table-cell {
+    padding: 0 !important;
+    border: none !important;
+}
 
+tr.wdaa-prev-row-no-margin {
+    margin-bottom: 0 !important;
+}
+
+.wdaa-live-price-notice.wdaa-hidden {
+    display: none !important;
+}
