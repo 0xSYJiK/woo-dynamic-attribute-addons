@@ -126,6 +126,87 @@ class WDAA_Attribute_Addons {
         add_filter( 'option_page_capability_wdaa_settings_group', function() {
             return 'manage_woocommerce';
         } );
+
+        add_settings_section(
+            'wdaa_addons_section',
+            '⚙️ ' . esc_html__( 'انتخاب ویژگی‌هایی که به عنوان افزودنی (Add-on) نمایش داده می‌شوند', 'wdaa' ),
+            array( $this, 'render_settings_section_desc' ),
+            'wdaa-settings'
+        );
+
+        add_settings_field(
+            'wdaa_enabled_addons_field',
+            esc_html__( 'ویژگی‌های محصول', 'wdaa' ),
+            array( $this, 'render_enabled_addons_field' ),
+            'wdaa-settings',
+            'wdaa_addons_section'
+        );
+    }
+
+    /**
+     * Admin: Render description for the settings section
+     */
+    public function render_settings_section_desc() {
+        echo '<p class="wdaa-admin-card-desc">' . esc_html__( 'ویژگی‌هایی که در زیر تیک می‌زنید، در برگه محصول به عنوان دکمه‌های کارتی مدرن نمایش داده می‌شوند (چه مثل پایه هزینه اضافه داشته باشند و چه مثل رنگ رایگان باشند):', 'wdaa' ) . '</p>';
+    }
+
+    /**
+     * Admin: Render the enabled addons table via the WordPress Settings API field callback
+     */
+    public function render_enabled_addons_field() {
+        $attribute_taxonomies = wc_get_attribute_taxonomies();
+        $saved_addons         = get_option( 'wdaa_enabled_addons', null );
+        ?>
+        <input type="hidden" name="wdaa_enabled_addons[]" value="">
+        <table class="widefat fixed striped wdaa-admin-table">
+            <thead>
+                <tr>
+                    <th class="wdaa-col-active"><strong><?php esc_html_e( 'فعال', 'wdaa' ); ?></strong></th>
+                    <th><strong><?php esc_html_e( 'نام ویژگی', 'wdaa' ); ?></strong></th>
+                    <th><strong><?php esc_html_e( 'نامک (Slug)', 'wdaa' ); ?></strong></th>
+                    <th><strong><?php esc_html_e( 'وضعیت', 'wdaa' ); ?></strong></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                if ( ! empty( $attribute_taxonomies ) ) {
+                    foreach ( $attribute_taxonomies as $tax ) {
+                        $tax_name      = wc_attribute_taxonomy_name( $tax->attribute_name );
+                        $sanitized_tax = wc_sanitize_taxonomy_name( $tax_name );
+
+                        if ( is_array( $saved_addons ) ) {
+                            $is_checked = false;
+                            foreach ( $saved_addons as $saved ) {
+                                if ( $saved === $tax_name || $saved === $sanitized_tax || wc_sanitize_taxonomy_name( $saved ) === $sanitized_tax ) {
+                                    $is_checked = true;
+                                    break;
+                                }
+                            }
+                        } else {
+                            $is_checked = self::is_default_addon_attribute( $tax_name, $tax->attribute_label );
+                        }
+                        ?>
+                        <tr>
+                            <td class="wdaa-cell-center">
+                                <input type="checkbox" name="wdaa_enabled_addons[]" value="<?php echo esc_attr( $tax_name ); ?>" <?php checked( $is_checked, true ); ?>>
+                            </td>
+                            <td><strong><?php echo esc_html( $tax->attribute_label ); ?></strong></td>
+                            <td><code><?php echo esc_html( $tax_name ); ?></code></td>
+                            <td>
+                                <?php if ( $is_checked ) : ?>
+                                    <span class="wdaa-status-enabled">✓ <?php esc_html_e( 'نمایش به عنوان افزودنی', 'wdaa' ); ?></span>
+                                <?php else : ?>
+                                    <span class="wdaa-status-disabled"><?php esc_html_e( 'غیرفعال', 'wdaa' ); ?></span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php
+                    }
+                }
+                ?>
+            </tbody>
+        </table>
+        <?php
     }
 
     /**
@@ -808,7 +889,6 @@ class WDAA_Attribute_Addons {
         }
 
         $attribute_taxonomies = wc_get_attribute_taxonomies();
-        $saved_addons         = get_option( 'wdaa_enabled_addons', null );
         ?>
         <div class="wrap wdaa-admin-wrap">
             <h1 class="wdaa-admin-title">⚡ <?php esc_html_e( 'افزونه ویژگی‌های قیمت‌دار هوشمند ووکامرس', 'wdaa' ); ?></h1>
@@ -816,60 +896,12 @@ class WDAA_Attribute_Addons {
             <?php settings_errors(); ?>
 
             <div class="card wdaa-admin-card">
-                <h2 class="wdaa-admin-card-title">⚙️ <?php esc_html_e( 'انتخاب ویژگی‌هایی که به عنوان افزودنی (Add-on) نمایش داده می‌شوند', 'wdaa' ); ?></h2>
-                <p class="wdaa-admin-card-desc"><?php esc_html_e( 'ویژگی‌هایی که در زیر تیک می‌زنید، در برگه محصول به عنوان دکمه‌های کارتی مدرن نمایش داده می‌شوند (چه مثل پایه هزینه اضافه داشته باشند و چه مثل رنگ رایگان باشند):', 'wdaa' ); ?></p>
                 <form method="post" action="options.php">
-                    <?php settings_fields( 'wdaa_settings_group' ); ?>
-                    <input type="hidden" name="wdaa_enabled_addons[]" value="">
-                    <table class="widefat fixed striped wdaa-admin-table">
-                        <thead>
-                            <tr>
-                                <th class="wdaa-col-active"><strong><?php esc_html_e( 'فعال', 'wdaa' ); ?></strong></th>
-                                <th><strong><?php esc_html_e( 'نام ویژگی', 'wdaa' ); ?></strong></th>
-                                <th><strong><?php esc_html_e( 'نامک (Slug)', 'wdaa' ); ?></strong></th>
-                                <th><strong><?php esc_html_e( 'وضعیت', 'wdaa' ); ?></strong></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            if ( ! empty( $attribute_taxonomies ) ) {
-                                foreach ( $attribute_taxonomies as $tax ) {
-                                    $tax_name      = wc_attribute_taxonomy_name( $tax->attribute_name );
-                                    $sanitized_tax = wc_sanitize_taxonomy_name( $tax_name );
-
-                                    if ( is_array( $saved_addons ) ) {
-                                        $is_checked = false;
-                                        foreach ( $saved_addons as $saved ) {
-                                            if ( $saved === $tax_name || $saved === $sanitized_tax || wc_sanitize_taxonomy_name( $saved ) === $sanitized_tax ) {
-                                                $is_checked = true;
-                                                break;
-                                            }
-                                        }
-                                    } else {
-                                        $is_checked = self::is_default_addon_attribute( $tax_name, $tax->attribute_label );
-                                    }
-                                    ?>
-                                    <tr>
-                                        <td class="wdaa-cell-center">
-                                            <input type="checkbox" name="wdaa_enabled_addons[]" value="<?php echo esc_attr( $tax_name ); ?>" <?php checked( $is_checked, true ); ?>>
-                                        </td>
-                                        <td><strong><?php echo esc_html( $tax->attribute_label ); ?></strong></td>
-                                        <td><code><?php echo esc_html( $tax_name ); ?></code></td>
-                                        <td>
-                                            <?php if ( $is_checked ) : ?>
-                                                <span class="wdaa-status-enabled">✓ <?php esc_html_e( 'نمایش به عنوان افزودنی', 'wdaa' ); ?></span>
-                                            <?php else : ?>
-                                                <span class="wdaa-status-disabled"><?php esc_html_e( 'غیرفعال', 'wdaa' ); ?></span>
-                                            <?php endif; ?>
-                                        </td>
-                                    </tr>
-                                    <?php
-                                }
-                            }
-                            ?>
-                        </tbody>
-                    </table>
-                    <?php submit_button( esc_html__( 'ذخیره تغییرات ویژگی‌ها', 'wdaa' ), 'primary', 'submit', false ); ?>
+                    <?php
+                    settings_fields( 'wdaa_settings_group' );
+                    do_settings_sections( 'wdaa-settings' );
+                    submit_button( esc_html__( 'ذخیره تغییرات ویژگی‌ها', 'wdaa' ), 'primary', 'submit', false );
+                    ?>
                 </form>
             </div>
 
