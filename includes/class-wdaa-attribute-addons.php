@@ -553,8 +553,6 @@ class WDAA_Attribute_Addons {
 					);
 
 					if ( ! empty( $all_terms ) && ! is_wp_error( $all_terms ) ) {
-						update_termmeta_cache( wp_list_pluck( $all_terms, 'term_id' ) );
-
 						$terms_by_tax = array();
 						foreach ( $all_terms as $term ) {
 							$terms_by_tax[ $term->taxonomy ][] = $term;
