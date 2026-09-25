@@ -389,7 +389,7 @@ class WDAA_Attribute_Addons {
         wp_enqueue_script(
             'wdaa-frontend-script',
             WDAA_PLUGIN_URL . 'assets/js/frontend.js',
-            array( 'jquery' ),
+            array( 'jquery', 'accounting' ),
             WDAA_VERSION,
             true
         );

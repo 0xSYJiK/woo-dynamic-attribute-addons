@@ -21,6 +21,11 @@
         var hasValidBasePrice = false;
         var currency = (typeof wdaa_vars !== 'undefined' && wdaa_vars.currency_symbol) ? wdaa_vars.currency_symbol : 'تومان';
         var thousandSep = (typeof wdaa_vars !== 'undefined' && typeof wdaa_vars.thousand_sep === 'string') ? wdaa_vars.thousand_sep : ',';
+        var decimalSep = (typeof wdaa_vars !== 'undefined' && typeof wdaa_vars.decimal_sep === 'string') ? wdaa_vars.decimal_sep : '.';
+        var decimals = (typeof wdaa_vars !== 'undefined' && typeof wdaa_vars.decimals !== 'undefined') ? parseInt(wdaa_vars.decimals, 10) : 0;
+        if (isNaN(decimals) || decimals < 0) {
+            decimals = 0;
+        }
         var labelTotalWithAddons = (typeof wdaa_vars !== 'undefined' && wdaa_vars.i18n_total_with_addons) ? wdaa_vars.i18n_total_with_addons : 'مجموع با احتساب گزینه‌های انتخابی:';
         var labelAddonsCost = (typeof wdaa_vars !== 'undefined' && wdaa_vars.i18n_addons_cost) ? wdaa_vars.i18n_addons_cost : 'هزینه گزینه‌های انتخابی:';
 
@@ -40,14 +45,21 @@
             });
         }
 
-        // Helper: Format number cleanly with localized thousand separator & Persian digits
+        // Helper: Format number using WooCommerce accounting.js and localized precision settings
         function formatMoney(num) {
             if (isNaN(num) || !isFinite(num) || num <= 0 || num > 1000000000000) {
                 return '۰';
             }
-            var intStr = Math.round(num).toString();
-            var parts = intStr.replace(/\B(?=(\d{3})+(?!\d))/g, thousandSep);
-            return toPersianDigits(parts);
+            var formatted;
+            if (typeof window.accounting !== 'undefined' && typeof window.accounting.formatNumber === 'function') {
+                formatted = window.accounting.formatNumber(num, decimals, thousandSep, decimalSep);
+            } else {
+                var fixed = num.toFixed(decimals);
+                var splitParts = fixed.split('.');
+                splitParts[0] = splitParts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thousandSep);
+                formatted = splitParts.length > 1 ? splitParts.join(decimalSep) : splitParts[0];
+            }
+            return toPersianDigits(formatted);
         }
 
         // Reposition add-ons box between default attributes (like Size) and the "صاف" (clear) button
