@@ -596,7 +596,7 @@ class WDAA_Attribute_Addons {
             update_termmeta_cache( $term_ids );
 
             $extra_price = (float) get_term_meta( $term_id, '_wdaa_extra_price', true );
-            $tax_label   = wc_attribute_label( $tax_name );
+            $tax_label   = sanitize_text_field( wc_attribute_label( $tax_name ) );
 
             if ( ! $has_saved_config ) {
                 $has_any_extra_price = ( $extra_price > 0 );
@@ -616,7 +616,7 @@ class WDAA_Attribute_Addons {
 
             $selected_addons[] = array(
                 'taxonomy'    => $tax_name,
-                'tax_label'   => $tax_label,
+                'tax_label'   => sanitize_text_field( $tax_label ),
                 'term_id'     => $term_id,
                 'term_name'   => sanitize_text_field( $matched_term->name ),
                 'extra_price' => $extra_price,
@@ -703,11 +703,15 @@ class WDAA_Attribute_Addons {
     public function save_order_line_item_data( $item, $cart_item_key, $values, $order ) {
         if ( ! empty( $values['wdaa_addons'] ) && is_array( $values['wdaa_addons'] ) ) {
             foreach ( $values['wdaa_addons'] as $addon ) {
-                $meta_value = $addon['term_name'];
-                if ( $addon['extra_price'] > 0 ) {
-                    $meta_value .= ' (+' . number_format_i18n( (float) $addon['extra_price'] ) . ' ' . get_woocommerce_currency_symbol() . ')';
+                $meta_key   = isset( $addon['tax_label'] ) ? sanitize_text_field( wp_strip_all_tags( (string) $addon['tax_label'] ) ) : '';
+                $meta_value = isset( $addon['term_name'] ) ? sanitize_text_field( wp_strip_all_tags( (string) $addon['term_name'] ) ) : '';
+                if ( ! empty( $addon['extra_price'] ) && (float) $addon['extra_price'] > 0 ) {
+                    $currency_symbol = sanitize_text_field( wp_strip_all_tags( html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8' ) ) );
+                    $meta_value     .= ' (+' . number_format_i18n( (float) $addon['extra_price'] ) . ' ' . $currency_symbol . ')';
                 }
-                $item->add_meta_data( $addon['tax_label'], $meta_value, true );
+                if ( '' !== $meta_key && '' !== $meta_value ) {
+                    $item->add_meta_data( $meta_key, sanitize_text_field( $meta_value ), true );
+                }
             }
         }
     }
