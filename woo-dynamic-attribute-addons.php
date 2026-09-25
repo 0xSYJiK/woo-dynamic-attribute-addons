@@ -313,9 +313,9 @@ class WDAA_Attribute_Addons {
             true
         );
 
-        // Pass currency symbol, price formatting, and translated labels to JS
+        // Pass currency symbol, price formatting, and translated labels to JS via wp_add_inline_script
         $raw_currency = wp_specialchars_decode( get_woocommerce_currency_symbol(), ENT_QUOTES );
-        wp_localize_script( 'wdaa-frontend-script', 'wdaa_vars', array(
+        $script_data  = array(
             'currency_symbol'        => esc_html( wp_strip_all_tags( $raw_currency ) ),
             'price_format'           => esc_html( get_woocommerce_price_format() ),
             'thousand_sep'           => esc_html( wc_get_price_thousand_separator() ),
@@ -323,7 +323,17 @@ class WDAA_Attribute_Addons {
             'decimals'               => absint( wc_get_price_decimals() ),
             'i18n_total_with_addons' => esc_html__( 'مجموع با احتساب گزینه‌های انتخابی:', 'wdaa' ),
             'i18n_addons_cost'       => esc_html__( 'هزینه گزینه‌های انتخابی:', 'wdaa' ),
-        ) );
+        );
+
+        wp_add_inline_script(
+            'wdaa-frontend-script',
+            'window.wdaa_vars = ' . wp_json_encode( $script_data ) . ';',
+            'before'
+        );
+
+        if ( function_exists( 'wp_set_script_translations' ) ) {
+            wp_set_script_translations( 'wdaa-frontend-script', 'wdaa', WDAA_PLUGIN_DIR . 'languages' );
+        }
     }
 
     /**
