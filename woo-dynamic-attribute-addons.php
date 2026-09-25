@@ -66,7 +66,8 @@ class WDAA_Attribute_Addons {
 
         // 1. Admin: Taxonomy term fields, Settings API, and Admin Assets
         if ( is_admin() ) {
-            add_action( 'init', array( $this, 'register_taxonomy_hooks' ), 99 );
+            add_action( 'current_screen', array( $this, 'register_taxonomy_hooks' ) );
+            add_action( 'admin_init', array( $this, 'register_taxonomy_hooks' ) );
             add_action( 'admin_init', array( $this, 'register_plugin_settings' ) );
             add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
         }
@@ -165,19 +166,21 @@ class WDAA_Attribute_Addons {
      * Hook into WooCommerce attribute taxonomies (pa_*) only on relevant taxonomy screens and AJAX actions
      */
     public function register_taxonomy_hooks() {
-        if ( ! current_user_can( 'manage_product_terms' ) ) {
+        static $registered = false;
+        if ( $registered || ! current_user_can( 'manage_product_terms' ) ) {
             return;
         }
 
-        global $pagenow;
-
         $action        = ( isset( $_REQUEST['action'] ) && is_string( $_REQUEST['action'] ) ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
-        $is_tax_screen = in_array( $pagenow, array( 'edit-tags.php', 'term.php' ), true );
-        $is_tax_ajax   = ( 'admin-ajax.php' === $pagenow && in_array( $action, array( 'add-tag', 'inline-save-tax' ), true ) );
+        $screen        = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+        $is_tax_screen = ( $screen instanceof WP_Screen ) && in_array( $screen->base, array( 'edit-tags', 'term' ), true );
+        $is_tax_ajax   = wp_doing_ajax() && in_array( $action, array( 'add-tag', 'inline-save-tax' ), true );
 
         if ( ! $is_tax_screen && ! $is_tax_ajax ) {
             return;
         }
+
+        $registered = true;
 
         if ( ! function_exists( 'wc_get_attribute_taxonomies' ) ) {
             return;
@@ -662,7 +665,7 @@ class WDAA_Attribute_Addons {
      * Cart & Checkout: Calculate separate fee row for selected options
      */
     public function calculate_addon_fees( $cart ) {
-        if ( is_admin() && ! defined( 'DOING_AJAX' ) ) {
+        if ( is_admin() && ! wp_doing_ajax() ) {
             return;
         }
 
