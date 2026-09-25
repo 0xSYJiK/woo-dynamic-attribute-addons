@@ -458,34 +458,46 @@ class WDAA_Attribute_Addons {
 	}
 
 	/**
-	 * Frontend: Render attribute options as stylish pill buttons
+	 * Fetch and cache addon sections for a product using batched term/termmeta queries and persistent transient fallback
+	 *
+	 * @param WC_Product|int $product Product instance or ID.
+	 * @return array
 	 */
-	public function render_product_attribute_options() {
-		global $product;
+	private function get_product_addon_sections( $product ) {
+		if ( is_numeric( $product ) ) {
+			$product = wc_get_product( absint( $product ) );
+		}
 
 		if ( ! $product || ! is_a( $product, 'WC_Product' ) ) {
-			return;
+			return array();
 		}
 
 		$product_id     = $product->get_id();
 		$cache_ver      = (int) get_option( 'wdaa_cache_version', 1 );
-		$cache_key      = 'wdaa_product_addons_' . $product_id . '_v' . $cache_ver;
+		$cache_key      = 'wdaa_pa_' . $product_id . '_v' . $cache_ver;
+		$use_ext_cache  = wp_using_ext_object_cache();
 		$addon_sections = wp_cache_get( $cache_key, 'wdaa' );
 
-		if ( false === $addon_sections ) {
-			$addon_sections = array();
-			$attributes     = $product->get_attributes();
+		if ( false === $addon_sections && ! $use_ext_cache ) {
+			$addon_sections = get_transient( $cache_key );
+			if ( false !== $addon_sections && is_array( $addon_sections ) ) {
+				wp_cache_set( $cache_key, $addon_sections, 'wdaa', HOUR_IN_SECONDS );
+			}
+		}
+
+		if ( false === $addon_sections || ! is_array( $addon_sections ) ) {
+			$addon_sections       = array();
+			$attributes           = $product->get_attributes();
+			$candidate_taxonomies = array();
 
 			if ( ! empty( $attributes ) ) {
 				$has_saved_config = is_array( get_option( 'wdaa_enabled_addons', null ) );
 
 				foreach ( $attributes as $attribute ) {
-					// Must be a registered global taxonomy attribute (pa_*)
 					if ( ! is_object( $attribute ) || ! method_exists( $attribute, 'is_taxonomy' ) || ! $attribute->is_taxonomy() ) {
 						continue;
 					}
 
-					// If used for variations (e.g. Size), let WooCommerce dropdown handle it!
 					if ( method_exists( $attribute, 'get_variation' ) && $attribute->get_variation() ) {
 						continue;
 					}
@@ -495,59 +507,95 @@ class WDAA_Attribute_Addons {
 						continue;
 					}
 
-					// Early skip: avoid querying terms & termmeta for attributes not enabled in settings
 					if ( $has_saved_config && ! self::is_addon_attribute( $taxonomy ) ) {
 						continue;
 					}
 
-					// Safely get all assigned terms for this product attribute
-					$terms = wc_get_product_terms( $product_id, $taxonomy, array( 'fields' => 'all' ) );
+					$candidate_taxonomies[] = $taxonomy;
+				}
 
-					if ( empty( $terms ) || is_wp_error( $terms ) ) {
-						continue;
-					}
-
-					// Prime all term meta in a single batched query
-					update_termmeta_cache( wp_list_pluck( $terms, 'term_id' ) );
-
-					$has_extra_price = false;
-					$terms_data      = array();
-
-					foreach ( $terms as $term ) {
-						$extra_price = (float) get_term_meta( $term->term_id, '_wdaa_extra_price', true );
-						if ( $extra_price > 0 ) {
-							$has_extra_price = true;
-						}
-						$terms_data[] = array(
-							'term_id'     => $term->term_id,
-							'name'        => $term->name,
-							'slug'        => $term->slug,
-							'extra_price' => $extra_price,
-						);
-					}
-
-					$label = wc_attribute_label( $taxonomy, $product );
-
-					// Check if this attribute is an Add-on when using fallback rules
-					if ( ! $has_saved_config && ! self::is_addon_attribute( $taxonomy, $label, $has_extra_price ) ) {
-						continue;
-					}
-
-					// Sort options so 0 price / lowest price is first (and pre-selected)
-					usort( $terms_data, function( $a, $b ) {
-						return $a['extra_price'] <=> $b['extra_price'];
-					} );
-
-					$addon_sections[] = array(
-						'taxonomy'   => $taxonomy,
-						'label'      => $label,
-						'terms_data' => $terms_data,
+				if ( ! empty( $candidate_taxonomies ) ) {
+					// Single batched query across all candidate attribute taxonomies for this product
+					$all_terms = wp_get_object_terms(
+						$product_id,
+						$candidate_taxonomies,
+						array(
+							'fields'                 => 'all',
+							'orderby'                => 'name',
+							'order'                  => 'ASC',
+							'update_term_meta_cache' => true,
+						)
 					);
+
+					if ( ! empty( $all_terms ) && ! is_wp_error( $all_terms ) ) {
+						update_termmeta_cache( wp_list_pluck( $all_terms, 'term_id' ) );
+
+						$terms_by_tax = array();
+						foreach ( $all_terms as $term ) {
+							$terms_by_tax[ $term->taxonomy ][] = $term;
+						}
+
+						foreach ( $candidate_taxonomies as $taxonomy ) {
+							if ( empty( $terms_by_tax[ $taxonomy ] ) ) {
+								continue;
+							}
+
+							$has_extra_price = false;
+							$terms_data      = array();
+
+							foreach ( $terms_by_tax[ $taxonomy ] as $term ) {
+								$extra_price = (float) get_term_meta( $term->term_id, '_wdaa_extra_price', true );
+								if ( $extra_price > 0 ) {
+									$has_extra_price = true;
+								}
+								$terms_data[] = array(
+									'term_id'     => $term->term_id,
+									'name'        => $term->name,
+									'slug'        => $term->slug,
+									'extra_price' => $extra_price,
+								);
+							}
+
+							$label = wc_attribute_label( $taxonomy, $product );
+
+							if ( ! $has_saved_config && ! self::is_addon_attribute( $taxonomy, $label, $has_extra_price ) ) {
+								continue;
+							}
+
+							usort( $terms_data, function( $a, $b ) {
+								return $a['extra_price'] <=> $b['extra_price'];
+							} );
+
+							$addon_sections[] = array(
+								'taxonomy'   => $taxonomy,
+								'label'      => $label,
+								'terms_data' => $terms_data,
+							);
+						}
+					}
 				}
 			}
 
 			wp_cache_set( $cache_key, $addon_sections, 'wdaa', HOUR_IN_SECONDS );
+			if ( ! $use_ext_cache ) {
+				set_transient( $cache_key, $addon_sections, HOUR_IN_SECONDS );
+			}
 		}
+
+		return $addon_sections;
+	}
+
+	/**
+	 * Frontend: Render attribute options as stylish pill buttons
+	 */
+	public function render_product_attribute_options() {
+		global $product;
+
+		if ( ! $product || ! is_a( $product, 'WC_Product' ) ) {
+			return;
+		}
+
+		$addon_sections = $this->get_product_addon_sections( $product );
 
 		if ( empty( $addon_sections ) ) {
 			return;
@@ -631,7 +679,16 @@ class WDAA_Attribute_Addons {
 		$total_extra_price = 0;
 		$product_id        = absint( $product_id );
 		$variation_id      = absint( $variation_id );
-		$has_saved_config  = is_array( get_option( 'wdaa_enabled_addons', null ) );
+		$addon_sections    = $this->get_product_addon_sections( $product_id );
+
+		if ( empty( $addon_sections ) ) {
+			return $cart_item_data;
+		}
+
+		$sections_by_tax = array();
+		foreach ( $addon_sections as $section ) {
+			$sections_by_tax[ $section['taxonomy'] ] = $section;
+		}
 
 		foreach ( $raw_options as $taxonomy => $term_id ) {
 			if ( ! is_scalar( $term_id ) || ! is_string( $taxonomy ) ) {
@@ -641,27 +698,16 @@ class WDAA_Attribute_Addons {
 			$term_id  = absint( $term_id );
 			$tax_name = sanitize_text_field( $taxonomy );
 
-			if ( empty( $tax_name ) || $term_id <= 0 ) {
+			if ( empty( $tax_name ) || $term_id <= 0 || ! isset( $sections_by_tax[ $tax_name ] ) ) {
 				continue;
 			}
 
-			// Early check if admin has saved enabled add-ons
-			if ( $has_saved_config && ! self::is_addon_attribute( $tax_name ) ) {
-				continue;
-			}
-
-			// Single query per attribute: fetch product terms and validate membership in memory
-			$product_terms = wc_get_product_terms( $product_id, $tax_name, array( 'fields' => 'all' ) );
-			if ( empty( $product_terms ) || is_wp_error( $product_terms ) ) {
-				continue;
-			}
-
+			$section      = $sections_by_tax[ $tax_name ];
 			$matched_term = null;
-			$term_ids     = array();
-			foreach ( $product_terms as $p_term ) {
-				$term_ids[] = $p_term->term_id;
-				if ( (int) $p_term->term_id === $term_id ) {
-					$matched_term = $p_term;
+			foreach ( $section['terms_data'] as $t_item ) {
+				if ( (int) $t_item['term_id'] === $term_id ) {
+					$matched_term = $t_item;
+					break;
 				}
 			}
 
@@ -669,33 +715,14 @@ class WDAA_Attribute_Addons {
 				continue;
 			}
 
-			// Prime termmeta cache in one query for all terms of this attribute
-			update_termmeta_cache( $term_ids );
-
-			$extra_price = (float) get_term_meta( $term_id, '_wdaa_extra_price', true );
-			$tax_label   = sanitize_text_field( wc_attribute_label( $tax_name ) );
-
-			if ( ! $has_saved_config ) {
-				$has_any_extra_price = ( $extra_price > 0 );
-				if ( ! $has_any_extra_price ) {
-					foreach ( $term_ids as $p_term_id ) {
-						if ( (float) get_term_meta( $p_term_id, '_wdaa_extra_price', true ) > 0 ) {
-							$has_any_extra_price = true;
-							break;
-						}
-					}
-				}
-
-				if ( ! self::is_addon_attribute( $tax_name, $tax_label, $has_any_extra_price ) ) {
-					continue;
-				}
-			}
+			$extra_price = (float) $matched_term['extra_price'];
+			$tax_label   = sanitize_text_field( $section['label'] );
 
 			$selected_addons[] = array(
 				'taxonomy'    => $tax_name,
-				'tax_label'   => sanitize_text_field( $tax_label ),
+				'tax_label'   => $tax_label,
 				'term_id'     => $term_id,
-				'term_name'   => sanitize_text_field( $matched_term->name ),
+				'term_name'   => sanitize_text_field( $matched_term['name'] ),
 				'extra_price' => $extra_price,
 			);
 
