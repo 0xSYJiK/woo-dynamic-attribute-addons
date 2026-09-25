@@ -257,11 +257,12 @@ class WDAA_Attribute_Addons {
         }
 
         if ( isset( $_POST['wdaa_extra_price'] ) && is_string( $_POST['wdaa_extra_price'] ) ) {
-            $price = sanitize_text_field( wp_unslash( $_POST['wdaa_extra_price'] ) );
-            if ( '' === $price || ! is_numeric( $price ) || (float) $price <= 0 ) {
+            $raw_price       = sanitize_text_field( wp_unslash( $_POST['wdaa_extra_price'] ) );
+            $formatted_price = wc_format_decimal( $raw_price );
+            if ( '' === $formatted_price || (float) $formatted_price <= 0 ) {
                 delete_term_meta( $term_id, '_wdaa_extra_price' );
             } else {
-                update_term_meta( $term_id, '_wdaa_extra_price', (float) $price );
+                update_term_meta( $term_id, '_wdaa_extra_price', $formatted_price );
             }
             $this->bump_cache_version();
         }
