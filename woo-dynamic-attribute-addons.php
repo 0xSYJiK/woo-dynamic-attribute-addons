@@ -330,15 +330,15 @@ class WDAA_Attribute_Addons {
      * Check if a product attribute should be treated as an interactive Add-on
      */
     public static function is_addon_attribute( $taxonomy, $tax_label = '', $has_extra_price = false ) {
-        $decoded_tax = urldecode( $taxonomy );
+        $sanitized_tax = wc_sanitize_taxonomy_name( $taxonomy );
 
         if ( null === self::$enabled_addons_map ) {
             $saved_addons = get_option( 'wdaa_enabled_addons', null );
             if ( is_array( $saved_addons ) ) {
                 self::$enabled_addons_map = array();
                 foreach ( $saved_addons as $saved ) {
-                    self::$enabled_addons_map[ $saved ]              = true;
-                    self::$enabled_addons_map[ urldecode( $saved ) ] = true;
+                    self::$enabled_addons_map[ $saved ]                                 = true;
+                    self::$enabled_addons_map[ wc_sanitize_taxonomy_name( $saved ) ] = true;
                 }
             } else {
                 self::$enabled_addons_map = false;
@@ -347,7 +347,7 @@ class WDAA_Attribute_Addons {
 
         // 1. Fast O(1) lookup when admin has saved settings
         if ( is_array( self::$enabled_addons_map ) ) {
-            return isset( self::$enabled_addons_map[ $taxonomy ] ) || isset( self::$enabled_addons_map[ $decoded_tax ] );
+            return isset( self::$enabled_addons_map[ $taxonomy ] ) || isset( self::$enabled_addons_map[ $sanitized_tax ] );
         }
 
         // 2. Default fallback (ONLY before the admin has ever saved the settings page):
@@ -362,8 +362,8 @@ class WDAA_Attribute_Addons {
      * Determine default addon attributes before admin saves settings for the first time
      */
     public static function is_default_addon_attribute( $taxonomy, $tax_label = '' ) {
-        $tax_slug   = trim( mb_strtolower( urldecode( $taxonomy ), 'UTF-8' ) );
-        $label_slug = trim( mb_strtolower( $tax_label, 'UTF-8' ) );
+        $tax_slug   = trim( wc_strtolower( wc_sanitize_taxonomy_name( $taxonomy ) ) );
+        $label_slug = trim( wc_strtolower( $tax_label ) );
 
         // Exact slug matches (only exact base or color)
         $exact_slugs = array(
@@ -824,13 +824,13 @@ class WDAA_Attribute_Addons {
                             <?php
                             if ( ! empty( $attribute_taxonomies ) ) {
                                 foreach ( $attribute_taxonomies as $tax ) {
-                                    $tax_name    = wc_attribute_taxonomy_name( $tax->attribute_name );
-                                    $decoded_tax = urldecode( $tax_name );
+                                    $tax_name      = wc_attribute_taxonomy_name( $tax->attribute_name );
+                                    $sanitized_tax = wc_sanitize_taxonomy_name( $tax_name );
 
                                     if ( is_array( $saved_addons ) ) {
                                         $is_checked = false;
                                         foreach ( $saved_addons as $saved ) {
-                                            if ( $saved === $tax_name || $saved === $decoded_tax || urldecode( $saved ) === $decoded_tax ) {
+                                            if ( $saved === $tax_name || $saved === $sanitized_tax || wc_sanitize_taxonomy_name( $saved ) === $sanitized_tax ) {
                                                 $is_checked = true;
                                                 break;
                                             }
