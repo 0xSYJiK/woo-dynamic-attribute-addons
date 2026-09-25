@@ -115,17 +115,23 @@
                     $masterBox.append($notice);
                 }
 
+                function createPriceNodes(amountText) {
+                    var $currencySpan = $('<span class="woocommerce-Price-currencySymbol wdaa-currency"></span>').text(currency);
+                    var $amountSpan = $('<span class="wdaa-amount"></span>').text(amountText);
+                    return [$currencySpan, $amountSpan];
+                }
+
                 if (hasValidBasePrice && currentBasePrice > 0 && currentBasePrice < 1000000000000) {
                     var finalTotal = currentBasePrice + totalExtra;
                     var formattedTotal = formatMoney(finalTotal);
-                    var formattedHtml = '<span class="wdaa-price-display"><span class="woocommerce-Price-currencySymbol wdaa-currency">' + currency + '</span><span class="wdaa-amount">' + formattedTotal + '</span></span>';
 
                     // Update notice inside the box
                     if (totalExtra > 0) {
+                        var $strongPrice = $('<strong class="wdaa-price-display"></strong>').append(createPriceNodes(formattedTotal));
                         $notice.empty()
                             .append($('<span></span>').text(labelTotalWithAddons))
                             .append(' ')
-                            .append($('<strong class="wdaa-price-display"></strong>').html('<span class="woocommerce-Price-currencySymbol wdaa-currency">' + currency + '</span><span class="wdaa-amount">' + formattedTotal + '</span>'))
+                            .append($strongPrice)
                             .show();
                     } else {
                         $notice.hide();
@@ -136,15 +142,17 @@
                     if ($varPrice.length) {
                         var $varAmount = $varPrice.find('.amount');
                         if ($varAmount.length) {
-                            $varAmount.last().html(formattedHtml);
+                            var $priceDisplay = $('<span class="wdaa-price-display"></span>').append(createPriceNodes(formattedTotal));
+                            $varAmount.last().empty().append($priceDisplay);
                         }
                     }
                 } else {
                     if (totalExtra > 0) {
+                        var $extraStrong = $('<strong class="wdaa-price-display"></strong>').append(createPriceNodes(formatMoney(totalExtra) + '+'));
                         $notice.empty()
                             .append($('<span></span>').text(labelAddonsCost))
                             .append(' ')
-                            .append($('<strong class="wdaa-price-display"></strong>').html('<span class="woocommerce-Price-currencySymbol wdaa-currency">' + currency + '</span><span class="wdaa-amount">' + formatMoney(totalExtra) + '+</span>'))
+                            .append($extraStrong)
                             .show();
                     } else {
                         $notice.hide();
