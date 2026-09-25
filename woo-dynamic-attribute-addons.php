@@ -522,8 +522,8 @@ class WDAA_Attribute_Addons {
             return $cart_item_data;
         }
 
-        // Enforce nonce for authenticated users while staying compatible with full-page HTML caches for anonymous shoppers
-        if ( is_user_logged_in() && ( ! isset( $_POST['wdaa_cart_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['wdaa_cart_nonce'] ) ), 'wdaa_add_to_cart' ) ) ) {
+        // Verify add-to-cart nonce unconditionally for all requests
+        if ( ! isset( $_POST['wdaa_cart_nonce'] ) || ! is_string( $_POST['wdaa_cart_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['wdaa_cart_nonce'] ) ), 'wdaa_add_to_cart' ) ) {
             return $cart_item_data;
         }
 
