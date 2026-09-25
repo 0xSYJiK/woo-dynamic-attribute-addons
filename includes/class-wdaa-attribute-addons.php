@@ -857,13 +857,13 @@ class WDAA_Attribute_Addons {
 		$terms = get_terms( array(
 			'taxonomy'               => array_keys( $taxonomy_labels ),
 			'hide_empty'             => false,
+			'number'                 => 200,
+			'no_found_rows'          => true,
 			'update_term_meta_cache' => true,
 			'meta_query'             => array(
 				array(
 					'key'     => '_wdaa_extra_price',
-					'value'   => 0,
-					'compare' => '>',
-					'type'    => 'NUMERIC',
+					'compare' => 'EXISTS',
 				),
 			),
 		) );
