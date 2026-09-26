@@ -213,6 +213,10 @@
 			var $row = $(this).closest('.wdaa-addon-row');
 			$row.find('.wdaa-pill-item').removeClass('is-selected');
 			$(this).closest('.wdaa-pill-item').addClass('is-selected');
+			$row.removeClass('wdaa-row-error');
+			if (!$masterBox.find('.wdaa-addon-row.wdaa-row-error').length) {
+				$('.wdaa-validation-notice').remove();
+			}
 			updateLivePriceDisplay();
 		});
 
@@ -270,12 +274,73 @@
 			}
 		}
 
-		$form.on('submit', function () {
+		// Validate that all addon options are selected before adding to cart
+		function validateAddons() {
+			var isValid = true;
+			var firstMissingRow = null;
+			var missingLabels = [];
+
+			$masterBox.find('.wdaa-addon-row').each(function () {
+				var $row = $(this);
+				var $checked = $row.find('input[type="radio"]:checked');
+				if (!$checked.length || !$checked.val()) {
+					isValid = false;
+					if (!firstMissingRow) {
+						firstMissingRow = $row;
+					}
+					var titleText = $row.find('.wdaa-attribute-title').text().replace(/انتخاب|:|：/g, '').trim();
+					if (titleText) {
+						missingLabels.push(titleText);
+					}
+					$row.addClass('wdaa-row-error');
+				} else {
+					$row.removeClass('wdaa-row-error');
+				}
+			});
+
+			if (!isValid) {
+				$('.wdaa-validation-notice').remove();
+				var $noticeList = $('<ul class="woocommerce-error" role="alert"></ul>');
+				missingLabels.forEach(function (lbl) {
+					$noticeList.append($('<li></li>').text('لطفاً گزینه مورد نظر برای «' + lbl + '» را انتخاب کنید.'));
+				});
+				var $noticeWrap = $('<div class="woocommerce-NoticeGroup woocommerce-NoticeGroup-wdaa wdaa-validation-notice"></div>').append($noticeList);
+
+				var $targetNoticeContainer = $('.woocommerce-notices-wrapper').first();
+				if ($targetNoticeContainer.length) {
+					$targetNoticeContainer.empty().append($noticeWrap);
+				} else {
+					$form.before($noticeWrap);
+				}
+
+				if (firstMissingRow && firstMissingRow.length) {
+					$('html, body').animate({
+						scrollTop: firstMissingRow.offset().top - 120
+					}, 350);
+				}
+				return false;
+			}
+
+			$('.wdaa-validation-notice').remove();
+			return true;
+		}
+
+		$form.on('submit', function (e) {
 			ensureBoxInForm();
+			if (!validateAddons()) {
+				e.preventDefault();
+				e.stopImmediatePropagation();
+				return false;
+			}
 		});
 
-		$(document).on('click', '.single_add_to_cart_button', function () {
+		$(document).on('click', '.single_add_to_cart_button', function (e) {
 			ensureBoxInForm();
+			if (!validateAddons()) {
+				e.preventDefault();
+				e.stopImmediatePropagation();
+				return false;
+			}
 		});
 
 		// Initial execution

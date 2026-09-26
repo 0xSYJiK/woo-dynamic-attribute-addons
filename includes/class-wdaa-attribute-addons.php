@@ -59,7 +59,8 @@ class WDAA_Attribute_Addons {
 		// 3. Frontend: Display options on single product page
 		add_action( 'woocommerce_before_add_to_cart_button', array( $this, 'render_product_attribute_options' ), 15 );
 
-		// 4. Cart: Add custom data on add to cart
+		// 4. Cart: Validate required addon selections & add custom data on add to cart
+		add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'validate_add_to_cart_addons' ), 10, 4 );
 		add_filter( 'woocommerce_add_cart_item_data', array( $this, 'add_cart_item_data' ), 10, 3 );
 
 		// 5. Cart: Display custom options under product title
@@ -779,10 +780,8 @@ class WDAA_Attribute_Addons {
 					</div>
 					<div class="wdaa-pills-container">
 						<?php
-						$is_first = true;
 						foreach ( $terms_data as $term_item ) :
-							$active_class = $is_first ? 'is-selected' : '';
-							$price_badge  = '';
+							$price_badge = '';
 
 							if ( $term_item['extra_price'] > 0 ) {
 								$price_badge = sprintf(
@@ -792,20 +791,18 @@ class WDAA_Attribute_Addons {
 								);
 							}
 							?>
-							<label class="wdaa-pill-item <?php echo esc_attr( $active_class ); ?>">
+							<label class="wdaa-pill-item">
 								<input type="radio" 
 									   name="wdaa_option[<?php echo esc_attr( $taxonomy ); ?>]" 
 									   value="<?php echo esc_attr( $term_item['term_id'] ); ?>" 
 									   data-price="<?php echo esc_attr( $term_item['extra_price'] ); ?>" 
-									   data-name="<?php echo esc_attr( $term_item['name'] ); ?>"
-									   <?php checked( $is_first, true ); ?>>
+									   data-name="<?php echo esc_attr( $term_item['name'] ); ?>">
 								<span class="wdaa-pill-label">
 									<span class="wdaa-pill-name"><?php echo esc_html( $term_item['name'] ); ?></span>
 									<?php echo wp_kses( $price_badge, self::get_allowed_price_html() ); ?>
 								</span>
 							</label>
 							<?php
-							$is_first = false;
 						endforeach;
 						?>
 					</div>
@@ -818,6 +815,89 @@ class WDAA_Attribute_Addons {
 			?>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Cart: Validate that all required addon options are selected before adding to cart
+	 *
+	 * @param bool $passed       Validation status.
+	 * @param int  $product_id   Product ID.
+	 * @param int  $quantity     Quantity.
+	 * @param int  $variation_id Variation ID.
+	 * @return bool
+	 */
+	public function validate_add_to_cart_addons( $passed, $product_id, $quantity, $variation_id = 0 ) {
+		$product_id   = absint( $product_id );
+		$variation_id = absint( $variation_id );
+
+		if ( $product_id <= 0 && $variation_id > 0 ) {
+			$product_id = $variation_id;
+		}
+
+		if ( $product_id <= 0 ) {
+			return $passed;
+		}
+
+		$addon_sections = $this->get_product_addon_sections( $product_id );
+		if ( empty( $addon_sections ) ) {
+			return $passed;
+		}
+
+		// 1. Gather raw options from $_REQUEST, $_POST, or serialized AJAX form data
+		$raw_options = null;
+		if ( ! empty( $_REQUEST['wdaa_option'] ) ) {
+			$raw_options = $_REQUEST['wdaa_option'];
+		} elseif ( ! empty( $_POST['wdaa_option'] ) ) {
+			$raw_options = $_POST['wdaa_option'];
+		} elseif ( ! empty( $_REQUEST['data'] ) && is_string( $_REQUEST['data'] ) ) {
+			wp_parse_str( wp_unslash( $_REQUEST['data'] ), $parsed );
+			if ( ! empty( $parsed['wdaa_option'] ) ) {
+				$raw_options = $parsed['wdaa_option'];
+			}
+		} elseif ( ! empty( $_REQUEST['form_data'] ) && is_string( $_REQUEST['form_data'] ) ) {
+			wp_parse_str( wp_unslash( $_REQUEST['form_data'] ), $parsed );
+			if ( ! empty( $parsed['wdaa_option'] ) ) {
+				$raw_options = $parsed['wdaa_option'];
+			}
+		}
+
+		if ( is_string( $raw_options ) ) {
+			$decoded = json_decode( $raw_options, true );
+			if ( is_array( $decoded ) ) {
+				$raw_options = $decoded;
+			}
+		}
+
+		$submitted = is_array( $raw_options ) ? $raw_options : array();
+
+		foreach ( $addon_sections as $section ) {
+			$tax   = $section['taxonomy'];
+			$label = $section['label'];
+
+			$found = false;
+			$candidates = array(
+				$tax,
+				urldecode( $tax ),
+				wc_sanitize_taxonomy_name( $tax ),
+				str_replace( 'pa_', '', $tax ),
+				'pa_' . str_replace( 'pa_', '', $tax ),
+			);
+
+			foreach ( $candidates as $cand ) {
+				if ( isset( $submitted[ $cand ] ) && absint( $submitted[ $cand ] ) > 0 ) {
+					$found = true;
+					break;
+				}
+			}
+
+			if ( ! $found ) {
+				/* translators: %s: Attribute label */
+				wc_add_notice( sprintf( esc_html__( 'لطفاً گزینه مورد نظر برای «%s» را انتخاب کنید.', 'wdaa' ), esc_html( $label ) ), 'error' );
+				$passed = false;
+			}
+		}
+
+		return $passed;
 	}
 
 	/**

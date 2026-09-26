@@ -372,3 +372,24 @@ tr.wdaa-prev-row-no-margin {
 .wdaa-live-price-notice.wdaa-hidden {
 	display: none !important;
 }
+
+/* Validation error highlighting and shake effect */
+.wdaa-addon-row.wdaa-row-error {
+	padding: 10px;
+	border: 1.5px dashed #f87171 !important;
+	border-radius: 10px;
+	background-color: #fef2f2 !important;
+	animation: wdaa-shake 0.4s ease-in-out;
+}
+
+@keyframes wdaa-shake {
+	0%, 100% { transform: translateX(0); }
+	20%, 60% { transform: translateX(-5px); }
+	40%, 80% { transform: translateX(5px); }
+}
+
+.wdaa-validation-notice {
+	margin-bottom: 18px !important;
+	animation: fadeIn 0.3s ease;
+}
+
