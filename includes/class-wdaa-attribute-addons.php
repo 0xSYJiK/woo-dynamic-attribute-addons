@@ -465,6 +465,17 @@ class WDAA_Attribute_Addons {
 	 * Enqueue frontend CSS and JS
 	 */
 	public function enqueue_frontend_assets() {
+		// Enqueue styles on cart and checkout so #toman-icon SVG and addon details format cleanly
+		if ( function_exists( 'is_cart' ) && function_exists( 'is_checkout' ) && ( is_cart() || is_checkout() ) ) {
+			wp_enqueue_style(
+				'wdaa-frontend-style',
+				WDAA_PLUGIN_URL . 'assets/css/frontend.css',
+				array(),
+				WDAA_VERSION
+			);
+			return;
+		}
+
 		if ( ! is_product() ) {
 			return;
 		}
@@ -855,7 +866,12 @@ class WDAA_Attribute_Addons {
 		// 2. Resolve parent product if a variation ID was passed as product_id
 		$product_id   = absint( $product_id );
 		$variation_id = absint( $variation_id );
-		$product      = wc_get_product( $product_id );
+
+		if ( $product_id <= 0 && $variation_id > 0 ) {
+			$product_id = $variation_id;
+		}
+
+		$product = wc_get_product( $product_id );
 
 		if ( $product && $product->is_type( 'variation' ) ) {
 			$parent_id  = $product->get_parent_id();
