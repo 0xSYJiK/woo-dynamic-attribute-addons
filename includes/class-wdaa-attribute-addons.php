@@ -94,6 +94,9 @@ class WDAA_Attribute_Addons {
 		if ( function_exists( 'wp_cache_flush_group' ) ) {
 			wp_cache_flush_group( 'wdaa' );
 		}
+		if ( has_action( 'litespeed_purge_all' ) ) {
+			do_action( 'litespeed_purge_all' );
+		}
 	}
 
 	/**
@@ -814,18 +817,54 @@ class WDAA_Attribute_Addons {
 				endif;
 			endforeach;
 			?>
+			<script>
+			(function() {
+				function syncWdaaCookie() {
+					var box = document.getElementById('wdaa-master-box');
+					if (!box) return;
+					var radios = box.querySelectorAll('input[type="radio"]:checked');
+					var data = {};
+					for (var i = 0; i < radios.length; i++) {
+						var r = radios[i];
+						var m = r.name.match(/wdaa_option\[([^\]]+)\]/);
+						if (m && r.value) {
+							data[m[1]] = r.value;
+						}
+					}
+					var json = encodeURIComponent(JSON.stringify(data));
+					document.cookie = 'wdaa_options=' + json + '; path=/; max-age=86400; SameSite=Lax';
+					var form = box.closest('form');
+					var pid = form ? form.querySelector('input[name="product_id"], button[name="add-to-cart"], input[name="add-to-cart"], input[name="variation_id"]') : null;
+					if (pid && pid.value) {
+						document.cookie = 'wdaa_options_' + pid.value + '=' + json + '; path=/; max-age=86400; SameSite=Lax';
+					}
+				}
+				document.addEventListener('change', function(e) {
+					if (e.target && e.target.name && e.target.name.indexOf('wdaa_option') === 0) {
+						syncWdaaCookie();
+					}
+				});
+				if (document.readyState === 'loading') {
+					document.addEventListener('DOMContentLoaded', syncWdaaCookie);
+				} else {
+					syncWdaaCookie();
+				}
+			})();
+			</script>
 		</div>
 		<?php
 	}
 
 	/**
-	 * Helper: Extract raw submitted addon options from $_REQUEST, $_POST, or serialized strings
+	 * Helper: Extract raw submitted addon options from $_REQUEST, $_POST, serialized strings, or Cookie fallback
 	 *
+	 * @param int $product_id Optional product ID for cookie lookup.
 	 * @return array
 	 */
-	public static function extract_raw_addon_options() {
+	public static function extract_raw_addon_options( $product_id = 0 ) {
 		$raw = null;
 
+		// 1. Direct POST / REQUEST parameters
 		if ( ! empty( $_REQUEST['wdaa_option'] ) ) {
 			$raw = $_REQUEST['wdaa_option'];
 		} elseif ( ! empty( $_POST['wdaa_option'] ) ) {
@@ -842,7 +881,7 @@ class WDAA_Attribute_Addons {
 			}
 		}
 
-		// Also check flat keys in $_POST / $_REQUEST like wdaa_option[pa_base]
+		// 2. Flat keys in $_POST / $_REQUEST like wdaa_option[pa_base]
 		if ( empty( $raw ) || ! is_array( $raw ) ) {
 			foreach ( $_REQUEST as $key => $val ) {
 				if ( 0 === strpos( $key, 'wdaa_option[' ) && is_scalar( $val ) ) {
@@ -851,6 +890,31 @@ class WDAA_Attribute_Addons {
 							$raw = array();
 						}
 						$raw[ $matches[1] ] = $val;
+					}
+				}
+			}
+		}
+
+		// 3. Cookie fallback for themes that strip custom POST fields in AJAX
+		if ( empty( $raw ) || ! is_array( $raw ) ) {
+			$product_id  = absint( $product_id );
+			$cookie_keys = array();
+			if ( $product_id > 0 ) {
+				$cookie_keys[] = 'wdaa_options_' . $product_id;
+				$product = wc_get_product( $product_id );
+				if ( $product && $product->is_type( 'variation' ) ) {
+					$cookie_keys[] = 'wdaa_options_' . $product->get_parent_id();
+				}
+			}
+			$cookie_keys[] = 'wdaa_options';
+
+			foreach ( $cookie_keys as $ck ) {
+				if ( ! empty( $_COOKIE[ $ck ] ) && is_string( $_COOKIE[ $ck ] ) ) {
+					$cookie_val = urldecode( wp_unslash( $_COOKIE[ $ck ] ) );
+					$decoded    = json_decode( $cookie_val, true );
+					if ( is_array( $decoded ) && ! empty( $decoded ) ) {
+						$raw = $decoded;
+						break;
 					}
 				}
 			}
@@ -924,7 +988,10 @@ class WDAA_Attribute_Addons {
 			return $passed;
 		}
 
-		$raw_options = self::extract_raw_addon_options();
+		$raw_options = self::extract_raw_addon_options( $product_id );
+		if ( empty( $raw_options ) && $variation_id > 0 ) {
+			$raw_options = self::extract_raw_addon_options( $variation_id );
+		}
 
 		// Build normalized map with all aliases
 		$submitted = array();
@@ -983,7 +1050,10 @@ class WDAA_Attribute_Addons {
 	 * @return array
 	 */
 	public function add_cart_item_data( $cart_item_data, $product_id, $variation_id ) {
-		$raw_options = self::extract_raw_addon_options();
+		$raw_options = self::extract_raw_addon_options( $product_id );
+		if ( empty( $raw_options ) && $variation_id > 0 ) {
+			$raw_options = self::extract_raw_addon_options( $variation_id );
+		}
 
 		if ( empty( $raw_options ) ) {
 			return $cart_item_data;
