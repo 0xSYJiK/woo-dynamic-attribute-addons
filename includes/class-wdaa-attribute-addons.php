@@ -62,6 +62,7 @@ class WDAA_Attribute_Addons {
 		// 4. Cart: Validate required addon selections & add custom data on add to cart
 		add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'validate_add_to_cart_addons' ), 10, 4 );
 		add_filter( 'woocommerce_add_cart_item_data', array( $this, 'add_cart_item_data' ), 10, 3 );
+		add_filter( 'woocommerce_cart_redirect_after_error', array( $this, 'send_ajax_error_message' ), 10, 2 );
 
 		// 5. Cart: Display custom options under product title
 		add_filter( 'woocommerce_get_item_data', array( $this, 'display_cart_item_data' ), 10, 2 );
@@ -818,6 +819,86 @@ class WDAA_Attribute_Addons {
 	}
 
 	/**
+	 * Helper: Extract raw submitted addon options from $_REQUEST, $_POST, or serialized strings
+	 *
+	 * @return array
+	 */
+	public static function extract_raw_addon_options() {
+		$raw = null;
+
+		if ( ! empty( $_REQUEST['wdaa_option'] ) ) {
+			$raw = $_REQUEST['wdaa_option'];
+		} elseif ( ! empty( $_POST['wdaa_option'] ) ) {
+			$raw = $_POST['wdaa_option'];
+		} elseif ( ! empty( $_REQUEST['data'] ) && is_string( $_REQUEST['data'] ) ) {
+			wp_parse_str( wp_unslash( $_REQUEST['data'] ), $parsed );
+			if ( ! empty( $parsed['wdaa_option'] ) ) {
+				$raw = $parsed['wdaa_option'];
+			}
+		} elseif ( ! empty( $_REQUEST['form_data'] ) && is_string( $_REQUEST['form_data'] ) ) {
+			wp_parse_str( wp_unslash( $_REQUEST['form_data'] ), $parsed );
+			if ( ! empty( $parsed['wdaa_option'] ) ) {
+				$raw = $parsed['wdaa_option'];
+			}
+		}
+
+		// Also check flat keys in $_POST / $_REQUEST like wdaa_option[pa_base]
+		if ( empty( $raw ) || ! is_array( $raw ) ) {
+			foreach ( $_REQUEST as $key => $val ) {
+				if ( 0 === strpos( $key, 'wdaa_option[' ) && is_scalar( $val ) ) {
+					if ( preg_match( '/^wdaa_option\[([^\]]+)\]$/', $key, $matches ) ) {
+						if ( ! is_array( $raw ) ) {
+							$raw = array();
+						}
+						$raw[ $matches[1] ] = $val;
+					}
+				}
+			}
+		}
+
+		if ( is_string( $raw ) ) {
+			$decoded = json_decode( $raw, true );
+			if ( is_array( $decoded ) ) {
+				$raw = $decoded;
+			}
+		}
+
+		return is_array( $raw ) ? $raw : array();
+	}
+
+	/**
+	 * Send clean error message to AJAX handlers (like theme toasts) instead of generic error
+	 *
+	 * @param string $url        Redirect URL.
+	 * @param int    $product_id Product ID.
+	 * @return string
+	 */
+	public function send_ajax_error_message( $url, $product_id ) {
+		if ( wp_doing_ajax() ) {
+			$notices = wc_get_notices( 'error' );
+			if ( ! empty( $notices ) ) {
+				$messages = array();
+				foreach ( $notices as $notice ) {
+					$text = isset( $notice['notice'] ) ? wp_strip_all_tags( (string) $notice['notice'] ) : '';
+					if ( '' !== $text ) {
+						$messages[] = $text;
+					}
+				}
+				if ( ! empty( $messages ) ) {
+					$msg  = implode( "\n", $messages );
+					$data = array(
+						'error'       => true,
+						'message'     => $msg,
+						'product_url' => $url,
+					);
+					wp_send_json( $data );
+				}
+			}
+		}
+		return $url;
+	}
+
+	/**
 	 * Cart: Validate that all required addon options are selected before adding to cart
 	 *
 	 * @param bool $passed       Validation status.
@@ -843,32 +924,25 @@ class WDAA_Attribute_Addons {
 			return $passed;
 		}
 
-		// 1. Gather raw options from $_REQUEST, $_POST, or serialized AJAX form data
-		$raw_options = null;
-		if ( ! empty( $_REQUEST['wdaa_option'] ) ) {
-			$raw_options = $_REQUEST['wdaa_option'];
-		} elseif ( ! empty( $_POST['wdaa_option'] ) ) {
-			$raw_options = $_POST['wdaa_option'];
-		} elseif ( ! empty( $_REQUEST['data'] ) && is_string( $_REQUEST['data'] ) ) {
-			wp_parse_str( wp_unslash( $_REQUEST['data'] ), $parsed );
-			if ( ! empty( $parsed['wdaa_option'] ) ) {
-				$raw_options = $parsed['wdaa_option'];
-			}
-		} elseif ( ! empty( $_REQUEST['form_data'] ) && is_string( $_REQUEST['form_data'] ) ) {
-			wp_parse_str( wp_unslash( $_REQUEST['form_data'] ), $parsed );
-			if ( ! empty( $parsed['wdaa_option'] ) ) {
-				$raw_options = $parsed['wdaa_option'];
-			}
-		}
+		$raw_options = self::extract_raw_addon_options();
 
-		if ( is_string( $raw_options ) ) {
-			$decoded = json_decode( $raw_options, true );
-			if ( is_array( $decoded ) ) {
-				$raw_options = $decoded;
+		// Build normalized map with all aliases
+		$submitted = array();
+		foreach ( $raw_options as $tax_key => $term_id ) {
+			$term_id = absint( $term_id );
+			if ( $term_id <= 0 ) {
+				continue;
 			}
+			$k       = (string) $tax_key;
+			$clean_k = str_replace( 'pa_', '', $k );
+			$submitted[ $k ]                               = $term_id;
+			$submitted[ urldecode( $k ) ]                  = $term_id;
+			$submitted[ wc_sanitize_taxonomy_name( $k ) ] = $term_id;
+			$submitted[ $clean_k ]                         = $term_id;
+			$submitted[ 'pa_' . $clean_k ]                 = $term_id;
+			$submitted[ urldecode( $clean_k ) ]            = $term_id;
+			$submitted[ 'pa_' . urldecode( $clean_k ) ]    = $term_id;
 		}
-
-		$submitted = is_array( $raw_options ) ? $raw_options : array();
 
 		foreach ( $addon_sections as $section ) {
 			$tax   = $section['taxonomy'];
@@ -884,7 +958,7 @@ class WDAA_Attribute_Addons {
 			);
 
 			foreach ( $candidates as $cand ) {
-				if ( isset( $submitted[ $cand ] ) && absint( $submitted[ $cand ] ) > 0 ) {
+				if ( isset( $submitted[ $cand ] ) && $submitted[ $cand ] > 0 ) {
 					$found = true;
 					break;
 				}
@@ -909,37 +983,9 @@ class WDAA_Attribute_Addons {
 	 * @return array
 	 */
 	public function add_cart_item_data( $cart_item_data, $product_id, $variation_id ) {
-		// 1. Gather raw options from $_REQUEST, $_POST, or serialized AJAX form data
-		$raw_options = null;
-
-		if ( ! empty( $_REQUEST['wdaa_option'] ) ) {
-			$raw_options = $_REQUEST['wdaa_option'];
-		} elseif ( ! empty( $_POST['wdaa_option'] ) ) {
-			$raw_options = $_POST['wdaa_option'];
-		} elseif ( ! empty( $_REQUEST['data'] ) && is_string( $_REQUEST['data'] ) ) {
-			wp_parse_str( wp_unslash( $_REQUEST['data'] ), $parsed );
-			if ( ! empty( $parsed['wdaa_option'] ) ) {
-				$raw_options = $parsed['wdaa_option'];
-			}
-		} elseif ( ! empty( $_REQUEST['form_data'] ) && is_string( $_REQUEST['form_data'] ) ) {
-			wp_parse_str( wp_unslash( $_REQUEST['form_data'] ), $parsed );
-			if ( ! empty( $parsed['wdaa_option'] ) ) {
-				$raw_options = $parsed['wdaa_option'];
-			}
-		}
+		$raw_options = self::extract_raw_addon_options();
 
 		if ( empty( $raw_options ) ) {
-			return $cart_item_data;
-		}
-
-		if ( is_string( $raw_options ) ) {
-			$decoded = json_decode( $raw_options, true );
-			if ( is_array( $decoded ) ) {
-				$raw_options = $decoded;
-			}
-		}
-
-		if ( ! is_array( $raw_options ) ) {
 			return $cart_item_data;
 		}
 

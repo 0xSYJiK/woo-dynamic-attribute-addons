@@ -5,6 +5,100 @@
 (function ($) {
 	'use strict';
 
+	// 0. Intercept ANY AJAX add-to-cart request to guarantee wdaa_option data is attached,
+	// even when themes use stripped custom AJAX payloads like { product_id, quantity }
+	$.ajaxPrefilter(function (options, originalOptions, jqXHR) {
+		try {
+			var url = (options.url || '').toString();
+			var isAddToCart = (
+				url.indexOf('wc-ajax=add_to_cart') !== -1 ||
+				url.indexOf('add_to_cart') !== -1 ||
+				(typeof options.data === 'string' && options.data.indexOf('add-to-cart=') !== -1)
+			);
+
+			if (!isAddToCart) {
+				return;
+			}
+
+			var $masterBox = $('#wdaa-master-box');
+			if (!$masterBox.length) {
+				return;
+			}
+
+			// Validate if required addons are selected
+			var isMissing = false;
+			$masterBox.find('.wdaa-addon-row').each(function () {
+				var $checked = $(this).find('input[type="radio"]:checked');
+				if (!$checked.length || !$checked.val()) {
+					isMissing = true;
+					return false;
+				}
+			});
+
+			if (isMissing) {
+				// Abort AJAX call and trigger frontend validation UI
+				if (typeof jqXHR.abort === 'function') {
+					jqXHR.abort();
+				}
+				if (typeof window.wdaaValidateAddons === 'function') {
+					window.wdaaValidateAddons();
+				}
+				return;
+			}
+
+			var $checkedRadios = $masterBox.find('.wdaa-addon-row input[type="radio"]:checked');
+			if (!$checkedRadios.length) {
+				return;
+			}
+
+			// Build dictionary of selected options
+			var wdaaMap = {};
+			$checkedRadios.each(function () {
+				var name = $(this).attr('name');
+				var val = $(this).val();
+				if (name && val) {
+					wdaaMap[name] = val;
+				}
+			});
+
+			var nonce = $('#wdaa_cart_nonce').val();
+			if (nonce) {
+				wdaaMap['wdaa_cart_nonce'] = nonce;
+			}
+
+			// 1. If options.data is string
+			if (typeof options.data === 'string') {
+				var serialized = $checkedRadios.serialize();
+				if (serialized) {
+					if (options.data.indexOf('wdaa_option') === -1) {
+						options.data += (options.data.length ? '&' : '') + serialized;
+						if (nonce && options.data.indexOf('wdaa_cart_nonce') === -1) {
+							options.data += '&wdaa_cart_nonce=' + encodeURIComponent(nonce);
+						}
+					}
+				}
+			}
+			// 2. If options.data is plain object
+			else if (typeof options.data === 'object' && options.data !== null && !(options.data instanceof FormData)) {
+				for (var k in wdaaMap) {
+					if (wdaaMap.hasOwnProperty(k)) {
+						options.data[k] = wdaaMap[k];
+					}
+				}
+			}
+			// 3. If options.data is FormData
+			else if (options.data instanceof FormData) {
+				for (var fk in wdaaMap) {
+					if (wdaaMap.hasOwnProperty(fk) && !options.data.has(fk)) {
+						options.data.append(fk, wdaaMap[fk]);
+					}
+				}
+			}
+		} catch (err) {
+			console.warn('WDAA ajaxPrefilter error:', err);
+		}
+	});
+
 	$(document).ready(function () {
 		var $masterBox = $('#wdaa-master-box');
 		if (!$masterBox.length) {
@@ -324,6 +418,8 @@
 			$('.wdaa-validation-notice').remove();
 			return true;
 		}
+
+		window.wdaaValidateAddons = validateAddons;
 
 		$form.on('submit', function (e) {
 			ensureBoxInForm();
