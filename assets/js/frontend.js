@@ -263,8 +263,24 @@
 			});
 		}
 
+		// Ensure wdaa-master-box inputs are attached inside form.cart during submit or AJAX add-to-cart
+		function ensureBoxInForm() {
+			if ($masterBox.length && $form.length && !$.contains($form[0], $masterBox[0])) {
+				$form.append($masterBox);
+			}
+		}
+
+		$form.on('submit', function () {
+			ensureBoxInForm();
+		});
+
+		$(document).on('click', '.single_add_to_cart_button', function () {
+			ensureBoxInForm();
+		});
+
 		// Initial execution
 		repositionMasterBox();
+		ensureBoxInForm();
 		syncResetButton();
 		updateLivePriceDisplay();
 	});
