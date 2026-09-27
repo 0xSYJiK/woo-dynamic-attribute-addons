@@ -248,22 +248,36 @@
 					var priceLabel = (totalExtra > 0) ? labelTotalWithAddons : labelFinalPrice;
 
 					// Render updated price notice inside master box
-					var $strongPrice = $('<strong class="wdaa-price-display"></strong>').append(createPriceNodes(formattedTotal));
+					var wasNoticeHidden = $notice.hasClass('wdaa-hidden');
+					var $strongPrice = $('<strong class="wdaa-price-display wdaa-price-updated"></strong>').append(createPriceNodes(formattedTotal));
 					$notice.empty()
 						.append($('<span></span>').text(priceLabel))
 						.append(' ')
 						.append($strongPrice)
 						.removeClass('wdaa-hidden');
+
+					if (wasNoticeHidden && $notice[0]) {
+						$notice.removeClass('wdaa-animate-in');
+						void $notice[0].offsetWidth;
+						$notice.addClass('wdaa-animate-in');
+					}
 				} else {
 					if (totalExtra > 0) {
-						var $extraStrong = $('<strong class="wdaa-price-display"></strong>').append(createPriceNodes(formatMoney(totalExtra) + '+'));
+						var wasNoticeHiddenExtra = $notice.hasClass('wdaa-hidden');
+						var $extraStrong = $('<strong class="wdaa-price-display wdaa-price-updated"></strong>').append(createPriceNodes(formatMoney(totalExtra) + '+'));
 						$notice.empty()
 							.append($('<span></span>').text(labelAddonsCost))
 							.append(' ')
 							.append($extraStrong)
 							.removeClass('wdaa-hidden');
+
+						if (wasNoticeHiddenExtra && $notice[0]) {
+							$notice.removeClass('wdaa-animate-in');
+							void $notice[0].offsetWidth;
+							$notice.addClass('wdaa-animate-in');
+						}
 					} else {
-						$notice.addClass('wdaa-hidden');
+						$notice.addClass('wdaa-hidden').removeClass('wdaa-animate-in');
 					}
 				}
 			} catch (err) {
@@ -299,15 +313,26 @@
 			}
 
 			if (hasSelection) {
+				var wasHidden = $resetBtn.hasClass('wdaa-hidden') || $resetBtn.css('display') === 'none';
 				if ($resetTr.length) {
 					$resetTr.removeClass('wdaa-hidden');
+					if (wasHidden && $resetTr[0]) {
+						$resetTr.removeClass('wdaa-animate-in');
+						void $resetTr[0].offsetWidth;
+						$resetTr.addClass('wdaa-animate-in');
+					}
 				}
 				$resetBtn.removeClass('wdaa-hidden');
+				if (wasHidden && $resetBtn[0]) {
+					$resetBtn.removeClass('wdaa-animate-in');
+					void $resetBtn[0].offsetWidth;
+					$resetBtn.addClass('wdaa-animate-in');
+				}
 			} else {
 				if ($resetTr.length) {
-					$resetTr.addClass('wdaa-hidden');
+					$resetTr.addClass('wdaa-hidden').removeClass('wdaa-animate-in');
 				}
-				$resetBtn.addClass('wdaa-hidden');
+				$resetBtn.addClass('wdaa-hidden').removeClass('wdaa-animate-in');
 			}
 		}
 
@@ -350,6 +375,12 @@
 
 			$form.on('show_variation', function (event, variation) {
 				syncResetButton();
+				var $vPrice = $form.find('.woocommerce-variation-price');
+				if ($vPrice.length && !$vPrice.hasClass('wdaa-hidden') && $vPrice[0]) {
+					$vPrice.removeClass('wdaa-animate-in');
+					void $vPrice[0].offsetWidth;
+					$vPrice.addClass('wdaa-animate-in');
+				}
 				if (variation && typeof variation.display_price !== 'undefined') {
 					var vPrice = parseFloat(variation.display_price);
 					if (!isNaN(vPrice) && vPrice > 0 && vPrice < 1000000000000) {

@@ -430,4 +430,97 @@ div.woocommerce-variation-price.wdaa-hidden,
 	overflow: hidden !important;
 }
 
+/* ==========================================================================
+   ENTRANCE ANIMATIONS: RESET VARIATIONS & PRICE DISPLAYS
+   ========================================================================== */
+
+@keyframes wdaaResetFadeIn {
+	0% {
+		opacity: 0;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+
+@keyframes wdaaResetSlideIn {
+	0% {
+		opacity: 0;
+		transform: translateY(-8px) scale(0.98);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+@keyframes wdaaPriceFadeInUp {
+	0% {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes wdaaPricePulse {
+	0% {
+		transform: scale(0.96);
+		opacity: 0.85;
+	}
+	50% {
+		transform: scale(1.02);
+		opacity: 1;
+	}
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
+}
+
+/* 1. Reset variations row & button ("صاف") entrance animation */
+tr.woocommerce_reset_variations_link_tr:not(.wdaa-hidden),
+.woocommerce_reset_variations_link_tr:not(.wdaa-hidden),
+tr.woocommerce_reset_variations_link_tr.wdaa-animate-in,
+.woocommerce_reset_variations_link_tr.wdaa-animate-in {
+	animation: wdaaResetFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.variations_form .reset_variations:not(.wdaa-hidden),
+.variations_form .reset_variations.wdaa-animate-in {
+	animation: wdaaResetSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+/* 2. Standard WooCommerce variation price animation (when displayed) */
+.woocommerce-variation-price:not(.wdaa-hidden),
+.woocommerce-variation-price.wdaa-animate-in,
+.single_variation:not(.wdaa-hidden) .woocommerce-variation-price {
+	animation: wdaaPriceFadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 3. WDAA Master Box live price notice animation */
+.wdaa-live-price-notice:not(.wdaa-hidden),
+.wdaa-live-price-notice.wdaa-animate-in {
+	animation: wdaaPriceFadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.wdaa-live-price-notice .wdaa-price-display.wdaa-price-updated {
+	animation: wdaaPricePulse 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	tr.woocommerce_reset_variations_link_tr:not(.wdaa-hidden),
+	.woocommerce_reset_variations_link_tr:not(.wdaa-hidden),
+	.variations_form .reset_variations:not(.wdaa-hidden),
+	.woocommerce-variation-price:not(.wdaa-hidden),
+	.wdaa-live-price-notice:not(.wdaa-hidden),
+	.wdaa-live-price-notice .wdaa-price-display.wdaa-price-updated {
+		animation: none !important;
+		transform: none !important;
+	}
+}
+
+
 

@@ -486,17 +486,17 @@ class WDAA_Attribute_Addons {
 			return;
 		}
 
-		$product_id = get_queried_object_id();
-		if ( $product_id <= 0 || empty( $this->get_product_addon_sections( $product_id ) ) ) {
-			return;
-		}
-
 		wp_enqueue_style(
 			'wdaa-frontend-style',
 			WDAA_PLUGIN_URL . 'assets/css/frontend.css',
 			array(),
 			WDAA_VERSION
 		);
+
+		$product_id = get_queried_object_id();
+		if ( $product_id <= 0 || empty( $this->get_product_addon_sections( $product_id ) ) ) {
+			return;
+		}
 
 		wp_enqueue_script(
 			'wdaa-frontend-script',
