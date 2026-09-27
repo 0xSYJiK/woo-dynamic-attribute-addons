@@ -55,7 +55,7 @@ td.wdaa-table-cell {
 	width: 100% !important;
 	max-width: 100% !important;
 	box-sizing: border-box !important;
-	margin: 0 0 16px 0 !important;
+	margin: 12px 0 16px 0 !important;
 	padding: 16px 20px !important;
 	background: #ffffff !important;
 	border: 1px solid #e9edf2 !important;
@@ -70,6 +70,7 @@ td.wdaa-table-cell {
 @media (max-width: 1200px) {
 	.wdaa-master-box {
 		width: 100% !important;
+		margin-top: 12px !important;
 		margin-bottom: 16px !important;
 		padding: 14px 18px !important;
 		border-radius: 9px !important;
