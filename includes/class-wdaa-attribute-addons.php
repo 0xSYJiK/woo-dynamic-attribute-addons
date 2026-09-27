@@ -12,6 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Main Plugin Class
  */
+if ( ! class_exists( 'WDAA_Attribute_Addons' ) ) {
 class WDAA_Attribute_Addons {
 
 	private static $instance = null;
@@ -1575,4 +1576,5 @@ class WDAA_Attribute_Addons {
 		</div>
 		<?php
 	}
+}
 }
