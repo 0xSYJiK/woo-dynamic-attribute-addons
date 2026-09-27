@@ -221,76 +221,75 @@
 			return totalExtra;
 		}
 
-		// Update live price display
-		function updateLivePriceDisplay() {
-			try {
-				var totalExtra = getTotalExtraPrice();
-				var $notice = $masterBox.find('.wdaa-live-price-notice');
-				if (!$notice.length) {
-					$notice = $('<div class="wdaa-live-price-notice wdaa-hidden"></div>');
-					$masterBox.append($notice);
+		var resetHideTimer = null;
+		var noticeHideTimer = null;
+
+		function showResetButton() {
+			var $resetBtn = $form.find('.reset_variations');
+			if (!$resetBtn.length) return;
+			var $resetTr = $resetBtn.closest('tr.woocommerce_reset_variations_link_tr, tr');
+
+			if (resetHideTimer) {
+				clearTimeout(resetHideTimer);
+				resetHideTimer = null;
+			}
+
+			var wasHidden = $resetBtn.hasClass('wdaa-hidden') || $resetBtn.hasClass('wdaa-animating-out');
+			$resetTr.removeClass('wdaa-hidden wdaa-animating-out');
+			$resetBtn.removeClass('wdaa-hidden wdaa-animating-out');
+
+			if (wasHidden) {
+				$resetTr.removeClass('wdaa-animate-in');
+				$resetBtn.removeClass('wdaa-animate-in');
+				if ($resetBtn[0]) {
+					void $resetBtn[0].offsetWidth;
 				}
-
-				function createPriceNodes(amountText) {
-					var $currencySpan = $('<span class="woocommerce-Price-currencySymbol wdaa-currency"><svg class="wdaa-toman-icon w-4 h-4" aria-hidden="true"><use href="#toman-icon" xlink:href="#toman-icon"></use></svg></span>');
-					var $amountSpan = $('<span class="wdaa-amount"></span>').text(amountText);
-					return [$currencySpan, $amountSpan];
-				}
-
-				// Always hide standard variation price elements when addons are used
-				$form.find('.woocommerce-variation-price, .single_variation .price, .single_variation_wrap .woocommerce-variation-price')
-					.addClass('wdaa-hidden')
-					.attr('style', 'display: none !important;');
-
-				if (hasValidBasePrice && currentBasePrice > 0 && currentBasePrice < 1000000000000) {
-					var finalTotal = currentBasePrice + totalExtra;
-					var formattedTotal = formatMoney(finalTotal);
-					var priceLabel = (totalExtra > 0) ? labelTotalWithAddons : labelFinalPrice;
-
-					// Render updated price notice inside master box
-					var wasNoticeHidden = $notice.hasClass('wdaa-hidden');
-					var $strongPrice = $('<strong class="wdaa-price-display wdaa-price-updated"></strong>').append(createPriceNodes(formattedTotal));
-					$notice.empty()
-						.append($('<span></span>').text(priceLabel))
-						.append(' ')
-						.append($strongPrice)
-						.removeClass('wdaa-hidden');
-
-					if (wasNoticeHidden && $notice[0]) {
-						$notice.removeClass('wdaa-animate-in');
-						void $notice[0].offsetWidth;
-						$notice.addClass('wdaa-animate-in');
-					}
-				} else {
-					if (totalExtra > 0) {
-						var wasNoticeHiddenExtra = $notice.hasClass('wdaa-hidden');
-						var $extraStrong = $('<strong class="wdaa-price-display wdaa-price-updated"></strong>').append(createPriceNodes(formatMoney(totalExtra) + '+'));
-						$notice.empty()
-							.append($('<span></span>').text(labelAddonsCost))
-							.append(' ')
-							.append($extraStrong)
-							.removeClass('wdaa-hidden');
-
-						if (wasNoticeHiddenExtra && $notice[0]) {
-							$notice.removeClass('wdaa-animate-in');
-							void $notice[0].offsetWidth;
-							$notice.addClass('wdaa-animate-in');
-						}
-					} else {
-						$notice.addClass('wdaa-hidden').removeClass('wdaa-animate-in');
-					}
-				}
-			} catch (err) {
-				console.warn('WDAA Price update error:', err);
+				$resetTr.addClass('wdaa-animate-in');
+				$resetBtn.addClass('wdaa-animate-in');
 			}
 		}
 
-		// Manage reset variations button ("صاف") visibility and zero-space collapse
-		function syncResetButton() {
+		function hideResetButton(immediate) {
 			var $resetBtn = $form.find('.reset_variations');
 			if (!$resetBtn.length) return;
-
 			var $resetTr = $resetBtn.closest('tr.woocommerce_reset_variations_link_tr, tr');
+
+			if ($resetBtn.hasClass('wdaa-hidden') && !$resetBtn.hasClass('wdaa-animating-out')) {
+				return;
+			}
+
+			if (immediate) {
+				if (resetHideTimer) {
+					clearTimeout(resetHideTimer);
+					resetHideTimer = null;
+				}
+				$resetTr.addClass('wdaa-hidden').removeClass('wdaa-animate-in wdaa-animating-out');
+				$resetBtn.addClass('wdaa-hidden').removeClass('wdaa-animate-in wdaa-animating-out');
+				return;
+			}
+
+			if ($resetBtn.hasClass('wdaa-animating-out')) {
+				return;
+			}
+
+			if (resetHideTimer) {
+				clearTimeout(resetHideTimer);
+			}
+
+			$resetTr.removeClass('wdaa-animate-in').addClass('wdaa-animating-out');
+			$resetBtn.removeClass('wdaa-animate-in').addClass('wdaa-animating-out');
+
+			resetHideTimer = setTimeout(function () {
+				$resetTr.addClass('wdaa-hidden').removeClass('wdaa-animating-out');
+				$resetBtn.addClass('wdaa-hidden').removeClass('wdaa-animating-out');
+				resetHideTimer = null;
+			}, 290);
+		}
+
+		// Manage reset variations button ("صاف") visibility and enter/exit animation
+		function syncResetButton(immediate) {
+			var $resetBtn = $form.find('.reset_variations');
+			if (!$resetBtn.length) return;
 
 			// Check ONLY WooCommerce variation attributes (name starts with attribute_)
 			var hasSelection = false;
@@ -313,26 +312,106 @@
 			}
 
 			if (hasSelection) {
-				var wasHidden = $resetBtn.hasClass('wdaa-hidden') || $resetBtn.css('display') === 'none';
-				if ($resetTr.length) {
-					$resetTr.removeClass('wdaa-hidden');
-					if (wasHidden && $resetTr[0]) {
-						$resetTr.removeClass('wdaa-animate-in');
-						void $resetTr[0].offsetWidth;
-						$resetTr.addClass('wdaa-animate-in');
+				showResetButton();
+			} else {
+				hideResetButton(immediate);
+			}
+		}
+
+		function showPriceNotice(labelText, $priceNode) {
+			var $notice = $masterBox.find('.wdaa-live-price-notice');
+			if (!$notice.length) {
+				$notice = $('<div class="wdaa-live-price-notice wdaa-hidden"></div>');
+				$masterBox.append($notice);
+			}
+
+			if (noticeHideTimer) {
+				clearTimeout(noticeHideTimer);
+				noticeHideTimer = null;
+			}
+
+			var wasHidden = $notice.hasClass('wdaa-hidden') || $notice.hasClass('wdaa-animating-out');
+			$notice.empty()
+				.append($('<span></span>').text(labelText))
+				.append(' ')
+				.append($priceNode);
+
+			$notice.removeClass('wdaa-hidden wdaa-animating-out');
+			if (wasHidden) {
+				$notice.removeClass('wdaa-animate-in');
+				if ($notice[0]) {
+					void $notice[0].offsetWidth;
+				}
+				$notice.addClass('wdaa-animate-in');
+			}
+		}
+
+		function hidePriceNotice(immediate) {
+			var $notice = $masterBox.find('.wdaa-live-price-notice');
+			if (!$notice.length) return;
+
+			if ($notice.hasClass('wdaa-hidden') && !$notice.hasClass('wdaa-animating-out')) {
+				return;
+			}
+
+			if (immediate) {
+				if (noticeHideTimer) {
+					clearTimeout(noticeHideTimer);
+					noticeHideTimer = null;
+				}
+				$notice.addClass('wdaa-hidden').removeClass('wdaa-animate-in wdaa-animating-out');
+				return;
+			}
+
+			if ($notice.hasClass('wdaa-animating-out')) {
+				return;
+			}
+
+			if (noticeHideTimer) {
+				clearTimeout(noticeHideTimer);
+			}
+
+			$notice.removeClass('wdaa-animate-in').addClass('wdaa-animating-out');
+			noticeHideTimer = setTimeout(function () {
+				$notice.addClass('wdaa-hidden').removeClass('wdaa-animating-out');
+				noticeHideTimer = null;
+			}, 290);
+		}
+
+		// Update live price display with enter and exit animations
+		function updateLivePriceDisplay(immediate) {
+			try {
+				var totalExtra = getTotalExtraPrice();
+
+				function createPriceNodes(amountText) {
+					var $currencySpan = $('<span class="woocommerce-Price-currencySymbol wdaa-currency"><svg class="wdaa-toman-icon w-4 h-4" aria-hidden="true"><use href="#toman-icon" xlink:href="#toman-icon"></use></svg></span>');
+					var $amountSpan = $('<span class="wdaa-amount"></span>').text(amountText);
+					return [$currencySpan, $amountSpan];
+				}
+
+				// Always hide standard variation price elements when addons are used
+				$form.find('.woocommerce-variation-price, .single_variation .price, .single_variation_wrap .woocommerce-variation-price')
+					.addClass('wdaa-hidden')
+					.attr('style', 'display: none !important;');
+
+				if (hasValidBasePrice && currentBasePrice > 0 && currentBasePrice < 1000000000000) {
+					var finalTotal = currentBasePrice + totalExtra;
+					var formattedTotal = formatMoney(finalTotal);
+					var priceLabel = (totalExtra > 0) ? labelTotalWithAddons : labelFinalPrice;
+
+					// Render updated price notice inside master box with smooth enter/pulse
+					var $strongPrice = $('<strong class="wdaa-price-display wdaa-price-updated"></strong>').append(createPriceNodes(formattedTotal));
+					showPriceNotice(priceLabel, $strongPrice);
+				} else {
+					if (totalExtra > 0) {
+						var $extraStrong = $('<strong class="wdaa-price-display wdaa-price-updated"></strong>').append(createPriceNodes(formatMoney(totalExtra) + '+'));
+						showPriceNotice(labelAddonsCost, $extraStrong);
+					} else {
+						hidePriceNotice(immediate);
 					}
 				}
-				$resetBtn.removeClass('wdaa-hidden');
-				if (wasHidden && $resetBtn[0]) {
-					$resetBtn.removeClass('wdaa-animate-in');
-					void $resetBtn[0].offsetWidth;
-					$resetBtn.addClass('wdaa-animate-in');
-				}
-			} else {
-				if ($resetTr.length) {
-					$resetTr.addClass('wdaa-hidden').removeClass('wdaa-animate-in');
-				}
-				$resetBtn.addClass('wdaa-hidden').removeClass('wdaa-animate-in');
+			} catch (err) {
+				console.warn('WDAA Price update error:', err);
 			}
 		}
 
@@ -497,8 +576,8 @@
 		// Initial execution
 		repositionMasterBox();
 		ensureBoxInForm();
-		syncResetButton();
-		updateLivePriceDisplay();
+		syncResetButton(true);
+		updateLivePriceDisplay(true);
 		$form.find('.woocommerce-variation-price, .single_variation .price').addClass('wdaa-hidden').attr('style', 'display: none !important;');
 	});
 })(jQuery);
