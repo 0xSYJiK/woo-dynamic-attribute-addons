@@ -431,7 +431,7 @@ div.woocommerce-variation-price.wdaa-hidden,
 }
 
 /* ==========================================================================
-   SMOOTH ENTER & EXIT ANIMATIONS: RESET BUTTON & LIVE PRICE NOTICE
+   SMOOTH & SLOWER ENTER & EXIT ANIMATIONS: RESET BUTTON & LIVE PRICE NOTICE
    ========================================================================== */
 
 /* 1. Reset variations row ("صاف") */
@@ -455,12 +455,12 @@ div.woocommerce-variation-price.wdaa-hidden,
 
 tr.woocommerce_reset_variations_link_tr.wdaa-animate-in,
 .woocommerce_reset_variations_link_tr.wdaa-animate-in {
-	animation: wdaaRowFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	animation: wdaaRowFadeIn 0.55s ease-out forwards;
 }
 
 tr.woocommerce_reset_variations_link_tr.wdaa-animating-out,
 .woocommerce_reset_variations_link_tr.wdaa-animating-out {
-	animation: wdaaRowFadeOut 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	animation: wdaaRowFadeOut 0.5s ease-in forwards;
 	pointer-events: none !important;
 }
 
@@ -469,7 +469,7 @@ tr.woocommerce_reset_variations_link_tr.wdaa-animating-out,
 	0% {
 		opacity: 0;
 		max-height: 0;
-		transform: translateY(-8px) scale(0.97);
+		transform: translateY(-10px) scale(0.96);
 		margin-top: 0 !important;
 		margin-bottom: 0 !important;
 		padding-top: 0 !important;
@@ -477,10 +477,13 @@ tr.woocommerce_reset_variations_link_tr.wdaa-animating-out,
 		border-width: 0 !important;
 		overflow: hidden;
 	}
-	50% {
-		opacity: 0.6;
-		max-height: 48px;
+	30% {
+		opacity: 0.25;
 		border-width: 2px !important;
+	}
+	60% {
+		opacity: 0.75;
+		max-height: 48px;
 	}
 	100% {
 		opacity: 1;
@@ -503,9 +506,14 @@ tr.woocommerce_reset_variations_link_tr.wdaa-animating-out,
 		border-width: 2px !important;
 		overflow: hidden;
 	}
-	40% {
+	35% {
+		opacity: 0.45;
+		transform: translateY(-5px) scale(0.97);
+	}
+	70% {
 		opacity: 0;
-		transform: translateY(-6px) scale(0.97);
+		max-height: 18px;
+		border-width: 2px !important;
 	}
 	100% {
 		opacity: 0;
@@ -522,11 +530,11 @@ tr.woocommerce_reset_variations_link_tr.wdaa-animating-out,
 }
 
 .variations_form .reset_variations.wdaa-animate-in {
-	animation: wdaaResetEnter 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+	animation: wdaaResetEnter 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
 }
 
 .variations_form .reset_variations.wdaa-animating-out {
-	animation: wdaaResetExit 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+	animation: wdaaResetExit 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
 	pointer-events: none !important;
 }
 
@@ -538,11 +546,15 @@ tr.woocommerce_reset_variations_link_tr.wdaa-animating-out,
 		padding-top: 0 !important;
 		margin-top: 0 !important;
 		border-top-color: transparent !important;
-		transform: translateY(8px);
+		transform: translateY(10px);
 		overflow: hidden;
 	}
-	50% {
-		opacity: 0.5;
+	30% {
+		opacity: 0.25;
+		border-top-color: rgba(233, 237, 242, 0.4) !important;
+	}
+	60% {
+		opacity: 0.75;
 		max-height: 80px;
 	}
 	100% {
@@ -566,10 +578,14 @@ tr.woocommerce_reset_variations_link_tr.wdaa-animating-out,
 		transform: translateY(0);
 		overflow: hidden;
 	}
-	40% {
+	35% {
+		opacity: 0.45;
+		transform: translateY(6px);
+		border-top-color: rgba(233, 237, 242, 0.4) !important;
+	}
+	70% {
 		opacity: 0;
 		border-top-color: transparent !important;
-		transform: translateY(6px);
 	}
 	100% {
 		opacity: 0;
@@ -585,11 +601,11 @@ tr.woocommerce_reset_variations_link_tr.wdaa-animating-out,
 }
 
 .wdaa-live-price-notice.wdaa-animate-in {
-	animation: wdaaPriceNoticeEnter 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+	animation: wdaaPriceNoticeEnter 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
 }
 
 .wdaa-live-price-notice.wdaa-animating-out {
-	animation: wdaaPriceNoticeExit 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+	animation: wdaaPriceNoticeExit 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
 	pointer-events: none !important;
 }
 
@@ -609,14 +625,14 @@ tr.woocommerce_reset_variations_link_tr.wdaa-animating-out,
 }
 
 .wdaa-live-price-notice .wdaa-price-display.wdaa-price-updated {
-	animation: wdaaPricePulse 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	animation: wdaaPricePulse 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* 4. Standard WooCommerce variation price (for variable products without addons) */
 @keyframes wdaaVariationPriceEnter {
 	0% {
 		opacity: 0;
-		transform: translateY(10px);
+		transform: translateY(12px);
 	}
 	100% {
 		opacity: 1;
@@ -631,16 +647,16 @@ tr.woocommerce_reset_variations_link_tr.wdaa-animating-out,
 	}
 	100% {
 		opacity: 0;
-		transform: translateY(8px);
+		transform: translateY(10px);
 	}
 }
 
 .woocommerce-variation-price.wdaa-animate-in {
-	animation: wdaaVariationPriceEnter 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	animation: wdaaVariationPriceEnter 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .woocommerce-variation-price.wdaa-animating-out {
-	animation: wdaaVariationPriceExit 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	animation: wdaaVariationPriceExit 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 	pointer-events: none !important;
 }
 

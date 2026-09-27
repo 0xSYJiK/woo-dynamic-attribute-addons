@@ -283,7 +283,7 @@
 				$resetTr.addClass('wdaa-hidden').removeClass('wdaa-animating-out');
 				$resetBtn.addClass('wdaa-hidden').removeClass('wdaa-animating-out');
 				resetHideTimer = null;
-			}, 290);
+			}, 510);
 		}
 
 		// Manage reset variations button ("صاف") visibility and enter/exit animation
@@ -375,7 +375,7 @@
 			noticeHideTimer = setTimeout(function () {
 				$notice.addClass('wdaa-hidden').removeClass('wdaa-animating-out');
 				noticeHideTimer = null;
-			}, 290);
+			}, 510);
 		}
 
 		// Update live price display with enter and exit animations
