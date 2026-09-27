@@ -687,25 +687,28 @@ body.wdaa-has-addons .single_variation_wrap .snapppay-widget:not(.wdaa-snapppay-
 	width: 100% !important;
 	box-sizing: border-box !important;
 	position: relative !important;
-	z-index: 1 !important;
-	animation: wdaaSnappPayEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+	z-index: auto !important;
+	background: #ffffff !important;
+	transform: none !important;
+	animation: none !important;
+	filter: none !important;
 }
 
-@keyframes wdaaSnappPayEnter {
-	0% {
-		opacity: 0;
-		transform: translateY(8px);
-	}
-	100% {
-		opacity: 1;
-		transform: translateY(0);
-	}
+.snapppay-widget.wdaa-snapppay-moved .snapppay-widget-content {
+	position: relative;
+	z-index: 1;
+	color: #1a1c23 !important;
 }
 
-@media (prefers-reduced-motion: reduce) {
-	.snapppay-widget.wdaa-snapppay-moved {
-		animation: none !important;
-		transform: none !important;
-		transition: none !important;
-	}
+.snapppay-widget.wdaa-snapppay-moved .snapppay-widget-title {
+	color: #1a1c23 !important;
+}
+
+.snapppay-widget.wdaa-snapppay-moved .snapppay-widget-description {
+	color: #626264 !important;
+}
+
+.snapppay-widget.wdaa-snapppay-moved .snapppay-widget-image {
+	position: relative;
+	z-index: 1;
 }
