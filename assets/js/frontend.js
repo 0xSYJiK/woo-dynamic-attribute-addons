@@ -265,8 +265,21 @@
 				return;
 			}
 
-			// Target 1: Directly after the "بازخورد درباره این کالا" link
-			var $reportLink = $('a[href*="/report/"], a:contains("بازخورد درباره این کالا")').first();
+			// Target 1: Directly after the "بازخورد درباره این کالا" link on the product page
+			// Note: We MUST scope to #main / .site-main so we don't accidentally match the header menu "/report/" link!
+			var $reportLink = $(
+				'#main a[href*="/report/"], .site-main a[href*="/report/"], ' +
+				'div.max-w-\\[313px\\] a[href*="/report/"], ' +
+				'#main a:contains("بازخورد درباره این کالا"), .site-main a:contains("بازخورد درباره این کالا")'
+			).first();
+
+			if (!$reportLink.length) {
+				var $reportIcon = $('#main use[xlink\\:href*="report-single-pro-icon"], .site-main use[xlink\\:href*="report-single-pro-icon"], use[xlink\\:href*="report-single-pro-icon"], use[href*="report-single-pro-icon"]');
+				if ($reportIcon.length) {
+					$reportLink = $reportIcon.closest('a');
+				}
+			}
+
 			if ($reportLink.length) {
 				if (!$banner.prev().is($reportLink)) {
 					$banner.insertAfter($reportLink).removeClass('wdaa-hidden').addClass('wdaa-banner-placed');
@@ -276,8 +289,8 @@
 				return;
 			}
 
-			// Target 2: Column 1 container (div.max-w-[313px] or col-span-4.a-md:order-3)
-			var $col1 = $('div.max-w-\\[313px\\], div.col-span-4.a-md\\:order-3').first();
+			// Target 2: Column 1 container (div.max-w-[313px] or col-span-4.a-md:order-3) inside #main
+			var $col1 = $('#main div.max-w-\\[313px\\], .site-main div.max-w-\\[313px\\], #main div.col-span-4.a-md\\:order-3, .site-main div.col-span-4.a-md\\:order-3').first();
 			if ($col1.length) {
 				if (!$banner.parent().is($col1)) {
 					$banner.appendTo($col1).removeClass('wdaa-hidden').addClass('wdaa-banner-placed');
@@ -287,8 +300,8 @@
 				return;
 			}
 
-			// Target 3: Fallback below description container
-			var $descTab = $('[data-tab="#tab-description"]').first();
+			// Target 3: Fallback below description container inside #main
+			var $descTab = $('#main [data-tab="#tab-description"], .site-main [data-tab="#tab-description"]').first();
 			if ($descTab.length) {
 				var $descBox = $descTab.closest('.mb-6, div');
 				if ($descBox.length) {
@@ -690,5 +703,10 @@
 			relocateSnappPayWidget();
 			relocateFreeSendBanner();
 		}, 1200);
+
+		$(window).on('load', function () {
+			relocateSnappPayWidget();
+			relocateFreeSendBanner();
+		});
 	});
 })(jQuery);
