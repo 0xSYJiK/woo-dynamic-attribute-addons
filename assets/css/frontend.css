@@ -393,3 +393,41 @@ tr.wdaa-prev-row-no-margin {
 	animation: fadeIn 0.3s ease;
 }
 
+/* ==========================================================================
+   SUPPRESS REDUNDANT VARIATION PRICE (Keep ONLY #wdaa-master-box live notice)
+   ========================================================================== */
+body.wdaa-has-addons div.woocommerce-variation-price,
+body.wdaa-has-addons .woocommerce-variation-price,
+body.wdaa-has-addons .single_variation .woocommerce-variation-price,
+body.wdaa-has-addons .single_variation .price,
+body.wdaa-has-addons .single_variation_wrap .woocommerce-variation-price,
+body.wdaa-has-addons .single_variation_wrap .price,
+.wdaa-has-addons div.woocommerce-variation-price,
+.wdaa-has-addons .woocommerce-variation-price,
+.variations_form.wdaa-has-addons div.woocommerce-variation-price,
+.variations_form.wdaa-has-addons .woocommerce-variation-price,
+.variations_form.wdaa-has-addons .single_variation .price,
+.variations_form:has(#wdaa-master-box) div.woocommerce-variation-price,
+.variations_form:has(#wdaa-master-box) .woocommerce-variation-price,
+.variations_form:has(#wdaa-master-box) .single_variation .price,
+form.cart:has(#wdaa-master-box) div.woocommerce-variation-price,
+form.cart:has(#wdaa-master-box) .woocommerce-variation-price,
+form.cart:has(#wdaa-master-box) .single_variation .price,
+div.woocommerce-variation-price.wdaa-hidden,
+.woocommerce-variation-price.wdaa-hidden {
+	display: none !important;
+	visibility: hidden !important;
+	height: 0 !important;
+	min-height: 0 !important;
+	max-height: 0 !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	border: none !important;
+	line-height: 0 !important;
+	font-size: 0 !important;
+	opacity: 0 !important;
+	pointer-events: none !important;
+	overflow: hidden !important;
+}
+
+

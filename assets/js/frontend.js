@@ -121,13 +121,30 @@
 			decimals = 0;
 		}
 		var labelTotalWithAddons = (typeof wdaa_vars !== 'undefined' && wdaa_vars.i18n_total_with_addons) ? wdaa_vars.i18n_total_with_addons : 'مجموع با احتساب گزینه‌های انتخابی:';
+		var labelFinalPrice = (typeof wdaa_vars !== 'undefined' && wdaa_vars.i18n_final_price) ? wdaa_vars.i18n_final_price : 'قیمت نهایی:';
 		var labelAddonsCost = (typeof wdaa_vars !== 'undefined' && wdaa_vars.i18n_addons_cost) ? wdaa_vars.i18n_addons_cost : 'هزینه گزینه‌های انتخابی:';
+
+		// Ensure body and form have addon marker classes and variation price is hidden
+		$form.addClass('wdaa-has-addons');
+		$('body').addClass('wdaa-has-addons');
+		$form.find('.woocommerce-variation-price, .single_variation .price').addClass('wdaa-hidden').attr('style', 'display: none !important;');
 
 		// 1. Initial Base Price from PHP data-attribute
 		var serverPrice = parseFloat($masterBox.data('base-price'));
-		if (!isNaN(serverPrice) && serverPrice > 0 && serverPrice < 1000000000000) {
-			currentBasePrice = serverPrice;
-			hasValidBasePrice = true;
+		if (isVariable) {
+			var initialVarId = parseInt($form.find('input[name="variation_id"]').val(), 10);
+			if (!isNaN(initialVarId) && initialVarId > 0 && !isNaN(serverPrice) && serverPrice > 0) {
+				currentBasePrice = serverPrice;
+				hasValidBasePrice = true;
+			} else {
+				hasValidBasePrice = false;
+				currentBasePrice = 0;
+			}
+		} else {
+			if (!isNaN(serverPrice) && serverPrice > 0 && serverPrice < 1000000000000) {
+				currentBasePrice = serverPrice;
+				hasValidBasePrice = true;
+			}
 		}
 
 		// Helper: Convert English numbers to Persian digits
@@ -220,31 +237,23 @@
 					return [$currencySpan, $amountSpan];
 				}
 
+				// Always hide standard variation price elements when addons are used
+				$form.find('.woocommerce-variation-price, .single_variation .price, .single_variation_wrap .woocommerce-variation-price')
+					.addClass('wdaa-hidden')
+					.attr('style', 'display: none !important;');
+
 				if (hasValidBasePrice && currentBasePrice > 0 && currentBasePrice < 1000000000000) {
 					var finalTotal = currentBasePrice + totalExtra;
 					var formattedTotal = formatMoney(finalTotal);
+					var priceLabel = (totalExtra > 0) ? labelTotalWithAddons : labelFinalPrice;
 
-					// Update notice inside the box
-					if (totalExtra > 0) {
-						var $strongPrice = $('<strong class="wdaa-price-display"></strong>').append(createPriceNodes(formattedTotal));
-						$notice.empty()
-							.append($('<span></span>').text(labelTotalWithAddons))
-							.append(' ')
-							.append($strongPrice)
-							.removeClass('wdaa-hidden');
-					} else {
-						$notice.addClass('wdaa-hidden');
-					}
-
-					// Update standard variation price container
-					var $varPrice = $form.find('.woocommerce-variation-price .price, .single_variation .price');
-					if ($varPrice.length) {
-						var $varAmount = $varPrice.find('.amount');
-						if ($varAmount.length) {
-							var $priceDisplay = $('<span class="wdaa-price-display"></span>').append(createPriceNodes(formattedTotal));
-							$varAmount.last().empty().append($priceDisplay);
-						}
-					}
+					// Render updated price notice inside master box
+					var $strongPrice = $('<strong class="wdaa-price-display"></strong>').append(createPriceNodes(formattedTotal));
+					$notice.empty()
+						.append($('<span></span>').text(priceLabel))
+						.append(' ')
+						.append($strongPrice)
+						.removeClass('wdaa-hidden');
 				} else {
 					if (totalExtra > 0) {
 						var $extraStrong = $('<strong class="wdaa-price-display"></strong>').append(createPriceNodes(formatMoney(totalExtra) + '+'));
@@ -336,6 +345,7 @@
 				repositionMasterBox();
 				syncResetButton();
 				updateLivePriceDisplay();
+				$form.find('.woocommerce-variation-price, .single_variation .price').addClass('wdaa-hidden').attr('style', 'display: none !important;');
 			});
 
 			$form.on('show_variation', function (event, variation) {
@@ -348,17 +358,31 @@
 						updateLivePriceDisplay();
 					}
 				}
+				$form.find('.woocommerce-variation-price, .single_variation .price').addClass('wdaa-hidden').attr('style', 'display: none !important;');
 			});
 
 			$form.on('hide_variation reset_data', function () {
 				syncResetButton();
-				if (serverPrice > 0) {
-					currentBasePrice = serverPrice;
-				} else {
-					hasValidBasePrice = false;
-				}
+				hasValidBasePrice = false;
+				currentBasePrice = 0;
 				updateLivePriceDisplay();
+				$form.find('.woocommerce-variation-price, .single_variation .price').addClass('wdaa-hidden').attr('style', 'display: none !important;');
 			});
+
+			// Continuously guard against dynamic theme scripts reviving the variation price
+			try {
+				if (window.MutationObserver && $form[0]) {
+					var priceObserver = new MutationObserver(function () {
+						var $unhidden = $form.find('.woocommerce-variation-price:not(.wdaa-hidden), .single_variation .price:not(.wdaa-hidden)');
+						if ($unhidden.length) {
+							$unhidden.addClass('wdaa-hidden').attr('style', 'display: none !important;');
+						}
+					});
+					priceObserver.observe($form[0], { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+				}
+			} catch (obsErr) {
+				// Fallback to event-based hiding
+			}
 		}
 
 		// Ensure wdaa-master-box inputs are attached inside form.cart during submit or AJAX add-to-cart
@@ -444,5 +468,6 @@
 		ensureBoxInForm();
 		syncResetButton();
 		updateLivePriceDisplay();
+		$form.find('.woocommerce-variation-price, .single_variation .price').addClass('wdaa-hidden').attr('style', 'display: none !important;');
 	});
 })(jQuery);

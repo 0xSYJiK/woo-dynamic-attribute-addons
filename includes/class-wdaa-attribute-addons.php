@@ -55,6 +55,7 @@ class WDAA_Attribute_Addons {
 
 		// 2. Frontend: Enqueue scripts & styles
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_assets' ) );
+		add_filter( 'body_class', array( $this, 'add_body_class' ) );
 
 		// 3. Frontend: Display options on single product page
 		add_action( 'woocommerce_before_add_to_cart_button', array( $this, 'render_product_attribute_options' ), 15 );
@@ -516,6 +517,7 @@ class WDAA_Attribute_Addons {
 			'decimal_sep'            => esc_html( wc_get_price_decimal_separator() ),
 			'decimals'               => absint( wc_get_price_decimals() ),
 			'i18n_total_with_addons' => esc_html__( 'مجموع با احتساب گزینه‌های انتخابی:', 'wdaa' ),
+			'i18n_final_price'       => esc_html__( 'قیمت نهایی:', 'wdaa' ),
 			'i18n_addons_cost'       => esc_html__( 'هزینه گزینه‌های انتخابی:', 'wdaa' ),
 		);
 
@@ -528,6 +530,22 @@ class WDAA_Attribute_Addons {
 		if ( function_exists( 'wp_set_script_translations' ) ) {
 			wp_set_script_translations( 'wdaa-frontend-script', 'wdaa', WDAA_PLUGIN_DIR . 'languages' );
 		}
+	}
+
+	/**
+	 * Add body class when product has active WDAA addons
+	 *
+	 * @param array $classes Body classes.
+	 * @return array
+	 */
+	public function add_body_class( $classes ) {
+		if ( function_exists( 'is_product' ) && is_product() ) {
+			$product_id = get_queried_object_id();
+			if ( $product_id > 0 && ! empty( $this->get_product_addon_sections( $product_id ) ) ) {
+				$classes[] = 'wdaa-has-addons';
+			}
+		}
+		return $classes;
 	}
 
 	/**
