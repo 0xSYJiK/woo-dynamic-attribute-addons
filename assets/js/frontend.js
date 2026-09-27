@@ -100,8 +100,14 @@
 	});
 
 	$(document).ready(function () {
+		// Relocate Free Send Banner if present on product page
+		relocateFreeSendBanner();
+
 		var $masterBox = $('#wdaa-master-box');
 		if (!$masterBox.length) {
+			setTimeout(relocateFreeSendBanner, 100);
+			setTimeout(relocateFreeSendBanner, 400);
+			setTimeout(relocateFreeSendBanner, 1200);
 			return;
 		}
 
@@ -250,6 +256,48 @@
 					$snappWidget.addClass('wdaa-snapppay-moved');
 				}
 			}
+		}
+
+		// Relocate Free Send Banner into Column 1 under "بازخورد درباره این کالا"
+		function relocateFreeSendBanner() {
+			var $banner = $('#wdaa-free-send-banner');
+			if (!$banner.length) {
+				return;
+			}
+
+			// Target 1: Directly after the "بازخورد درباره این کالا" link
+			var $reportLink = $('a[href*="/report/"], a:contains("بازخورد درباره این کالا")').first();
+			if ($reportLink.length) {
+				if (!$banner.prev().is($reportLink)) {
+					$banner.insertAfter($reportLink).removeClass('wdaa-hidden').addClass('wdaa-banner-placed');
+				} else {
+					$banner.removeClass('wdaa-hidden').addClass('wdaa-banner-placed');
+				}
+				return;
+			}
+
+			// Target 2: Column 1 container (div.max-w-[313px] or col-span-4.a-md:order-3)
+			var $col1 = $('div.max-w-\\[313px\\], div.col-span-4.a-md\\:order-3').first();
+			if ($col1.length) {
+				if (!$banner.parent().is($col1)) {
+					$banner.appendTo($col1).removeClass('wdaa-hidden').addClass('wdaa-banner-placed');
+				} else {
+					$banner.removeClass('wdaa-hidden').addClass('wdaa-banner-placed');
+				}
+				return;
+			}
+
+			// Target 3: Fallback below description container
+			var $descTab = $('[data-tab="#tab-description"]').first();
+			if ($descTab.length) {
+				var $descBox = $descTab.closest('.mb-6, div');
+				if ($descBox.length) {
+					$banner.insertAfter($descBox).removeClass('wdaa-hidden').addClass('wdaa-banner-placed');
+					return;
+				}
+			}
+
+			$banner.removeClass('wdaa-hidden').addClass('wdaa-banner-placed');
 		}
 
 		// Calculate total extra price from all selected addons
@@ -624,13 +672,23 @@
 		repositionMasterBox();
 		ensureBoxInForm();
 		relocateSnappPayWidget();
+		relocateFreeSendBanner();
 		syncResetButton(true);
 		updateLivePriceDisplay(true);
 		$form.find('.woocommerce-variation-price, .single_variation .price').addClass('wdaa-hidden').attr('style', 'display: none !important;');
 
 		// Safety timeouts for late or lazy-loaded widgets
-		setTimeout(relocateSnappPayWidget, 100);
-		setTimeout(relocateSnappPayWidget, 400);
-		setTimeout(relocateSnappPayWidget, 1200);
+		setTimeout(function () {
+			relocateSnappPayWidget();
+			relocateFreeSendBanner();
+		}, 100);
+		setTimeout(function () {
+			relocateSnappPayWidget();
+			relocateFreeSendBanner();
+		}, 400);
+		setTimeout(function () {
+			relocateSnappPayWidget();
+			relocateFreeSendBanner();
+		}, 1200);
 	});
 })(jQuery);

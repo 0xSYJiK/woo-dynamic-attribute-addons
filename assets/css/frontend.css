@@ -712,3 +712,65 @@ body.wdaa-has-addons .single_variation_wrap .snapppay-widget:not(.wdaa-snapppay-
 	position: relative;
 	z-index: 1;
 }
+
+/* 6. Free Shipping Banner */
+#wdaa-free-send-banner.wdaa-hidden {
+	display: none !important;
+}
+
+.wdaa-free-send-banner {
+	display: flex !important;
+	justify-content: space-between !important;
+	align-items: center !important;
+	background: #f0fdf9 !important;
+	border: 1px solid #d1fae5 !important;
+	border-radius: 9px !important;
+	margin-top: 16px !important;
+	margin-bottom: 0 !important;
+	padding: 6px 14px !important;
+	direction: rtl !important;
+	box-sizing: border-box !important;
+	width: 100% !important;
+	position: relative !important;
+	overflow: visible !important;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+}
+
+.wdaa-free-send-title {
+	color: #0b6859 !important;
+	font-size: 13px !important;
+	font-weight: 700 !important;
+	white-space: nowrap !important;
+	line-height: 1.4 !important;
+	font-family: inherit !important;
+}
+
+.wdaa-free-send-svg {
+	position: relative !important;
+	display: flex !important;
+	align-items: center !important;
+	flex-shrink: 0 !important;
+}
+
+.wdaa-free-send-svg svg {
+	width: 115px !important;
+	max-width: 120px !important;
+	height: auto !important;
+	display: block !important;
+	position: relative !important;
+	bottom: -7px !important;
+}
+
+@media (max-width: 1200px) {
+	.wdaa-free-send-banner {
+		padding: 6px 10px !important;
+		margin-top: 12px !important;
+	}
+	.wdaa-free-send-title {
+		font-size: 12px !important;
+	}
+	.wdaa-free-send-svg svg {
+		width: 100px !important;
+		bottom: -6px !important;
+	}
+}

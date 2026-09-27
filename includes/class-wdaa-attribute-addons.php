@@ -51,14 +51,20 @@ class WDAA_Attribute_Addons {
 			add_action( 'admin_init', array( $this, 'register_taxonomy_hooks' ) );
 			add_action( 'admin_init', array( $this, 'register_plugin_settings' ) );
 			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
+			add_action( 'add_meta_boxes', array( $this, 'register_product_meta_boxes' ) );
+			add_action( 'woocommerce_product_options_shipping', array( $this, 'render_product_shipping_option' ) );
+			add_action( 'woocommerce_process_product_meta', array( $this, 'save_product_free_shipping_meta' ) );
+			add_action( 'save_post_product', array( $this, 'save_product_free_shipping_meta' ) );
 		}
 
 		// 2. Frontend: Enqueue scripts & styles
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_assets' ) );
 		add_filter( 'body_class', array( $this, 'add_body_class' ) );
 
-		// 3. Frontend: Display options on single product page
+		// 3. Frontend: Display options on single product page & Free Shipping Banner
 		add_action( 'woocommerce_before_add_to_cart_button', array( $this, 'render_product_attribute_options' ), 15 );
+		add_action( 'woocommerce_before_single_product', array( $this, 'render_free_shipping_banner' ), 5 );
+		add_action( 'woocommerce_single_product_summary', array( $this, 'render_free_shipping_banner' ), 99 );
 
 		// 4. Cart: Validate required addon selections & add custom data on add to cart
 		add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'validate_add_to_cart_addons' ), 10, 4 );
@@ -493,8 +499,11 @@ class WDAA_Attribute_Addons {
 			WDAA_VERSION
 		);
 
-		$product_id = get_queried_object_id();
-		if ( $product_id <= 0 || empty( $this->get_product_addon_sections( $product_id ) ) ) {
+		$product_id    = get_queried_object_id();
+		$has_addons    = ( $product_id > 0 && ! empty( $this->get_product_addon_sections( $product_id ) ) );
+		$has_free_send = ( $product_id > 0 && 'yes' === get_post_meta( $product_id, '_wdaa_free_shipping', true ) );
+
+		if ( ! $has_addons && ! $has_free_send ) {
 			return;
 		}
 
@@ -533,7 +542,7 @@ class WDAA_Attribute_Addons {
 	}
 
 	/**
-	 * Add body class when product has active WDAA addons
+	 * Add body class when product has active WDAA addons or free shipping enabled
 	 *
 	 * @param array $classes Body classes.
 	 * @return array
@@ -541,11 +550,116 @@ class WDAA_Attribute_Addons {
 	public function add_body_class( $classes ) {
 		if ( function_exists( 'is_product' ) && is_product() ) {
 			$product_id = get_queried_object_id();
-			if ( $product_id > 0 && ! empty( $this->get_product_addon_sections( $product_id ) ) ) {
-				$classes[] = 'wdaa-has-addons';
+			if ( $product_id > 0 ) {
+				if ( ! empty( $this->get_product_addon_sections( $product_id ) ) ) {
+					$classes[] = 'wdaa-has-addons';
+				}
+				if ( 'yes' === get_post_meta( $product_id, '_wdaa_free_shipping', true ) ) {
+					$classes[] = 'wdaa-has-free-shipping';
+				}
 			}
 		}
 		return $classes;
+	}
+
+	/**
+	 * Register Product Meta Box for Free Shipping
+	 */
+	public function register_product_meta_boxes() {
+		add_meta_box(
+			'wdaa_free_shipping_metabox',
+			'🚚 ' . esc_html__( 'ارسال رایگان', 'wdaa' ),
+			array( $this, 'render_free_shipping_metabox' ),
+			'product',
+			'side',
+			'default'
+		);
+	}
+
+	/**
+	 * Render Free Shipping Meta Box in Product Edit screen
+	 *
+	 * @param WP_Post $post Current post object.
+	 */
+	public function render_free_shipping_metabox( $post ) {
+		wp_nonce_field( 'wdaa_save_free_shipping', 'wdaa_free_shipping_nonce' );
+		$is_free = get_post_meta( $post->ID, '_wdaa_free_shipping', true );
+		?>
+		<div class="wdaa-admin-metabox">
+			<label for="_wdaa_free_shipping" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+				<input type="checkbox" name="_wdaa_free_shipping" id="_wdaa_free_shipping" value="yes" <?php checked( $is_free, 'yes' ); ?> style="margin-top:2px;" />
+				<span>
+					<strong><?php esc_html_e( 'نمایش بنر ارسال رایگان', 'wdaa' ); ?></strong>
+					<span style="display:block; color:#64748b; font-size:12px; margin-top:3px; line-height:1.4;">
+						<?php esc_html_e( 'در صورت فعال بودن، بنر گرافیکی ارسال رایگان در برگه این محصول نمایش داده می‌شود.', 'wdaa' ); ?>
+					</span>
+				</span>
+			</label>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render Free Shipping option in WooCommerce Shipping tab
+	 */
+	public function render_product_shipping_option() {
+		echo '<div class="options_group">';
+		woocommerce_wp_checkbox( array(
+			'id'          => '_wdaa_free_shipping',
+			'label'       => __( 'ارسال رایگان (بنر)', 'wdaa' ),
+			'description' => __( 'نمایش نشان و بنر ارسال رایگان در برگه این محصول', 'wdaa' ),
+			'desc_tip'    => true,
+		) );
+		echo '</div>';
+	}
+
+	/**
+	 * Save Free Shipping Meta on Product Save
+	 *
+	 * @param int $post_id Post ID.
+	 */
+	public function save_product_free_shipping_meta( $post_id ) {
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return;
+		}
+
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return;
+		}
+
+		if ( isset( $_POST['wdaa_free_shipping_nonce'] ) && ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['wdaa_free_shipping_nonce'] ) ), 'wdaa_save_free_shipping' ) ) {
+			return;
+		}
+
+		if ( isset( $_POST['post_type'] ) && 'product' === $_POST['post_type'] ) {
+			$is_free = ( isset( $_POST['_wdaa_free_shipping'] ) && 'yes' === $_POST['_wdaa_free_shipping'] ) ? 'yes' : 'no';
+			update_post_meta( $post_id, '_wdaa_free_shipping', $is_free );
+		}
+	}
+
+	/**
+	 * Render Free Shipping Banner on Single Product Page
+	 */
+	public function render_free_shipping_banner() {
+		if ( ! function_exists( 'is_product' ) || ! is_product() ) {
+			return;
+		}
+
+		$product_id = get_queried_object_id();
+		if ( $product_id <= 0 || 'yes' !== get_post_meta( $product_id, '_wdaa_free_shipping', true ) ) {
+			return;
+		}
+
+		static $rendered = false;
+		if ( $rendered ) {
+			return;
+		}
+		$rendered = true;
+
+		$template_path = WDAA_PLUGIN_DIR . 'templates/free-send-banner.php';
+		if ( file_exists( $template_path ) ) {
+			include $template_path;
+		}
 	}
 
 	/**
