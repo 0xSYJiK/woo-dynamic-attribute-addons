@@ -713,6 +713,13 @@ body.wdaa-has-addons .single_variation_wrap .snapppay-widget:not(.wdaa-snapppay-
 	z-index: 1;
 }
 
+@media (max-width: 1200px) {
+	.snapppay-widget.wdaa-snapppay-moved,
+	body.wdaa-has-addons .snapppay-widget {
+		margin-bottom: 14px !important;
+	}
+}
+
 /* 6. Free Shipping Banner */
 #wdaa-free-send-banner.wdaa-hidden {
 	display: none !important;

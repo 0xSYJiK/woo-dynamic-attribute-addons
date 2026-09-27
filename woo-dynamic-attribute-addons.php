@@ -3,7 +3,7 @@
  * Plugin Name: ویژگی‌های قیمت‌دار هوشمند ووکامرس (WooCommerce Dynamic Attribute Add-ons)
  * Plugin URI: https://dookht.com
  * Description: افزودن هزینه اضافی پویا به مقادیر ویژگی‌های محصول، نمایش دکمه‌های کارتی شیک در برگه محصول، محاسبه آنی قیمت و درج ردیف مجزا در فاکتور بدون نیاز به ساخت متغیرهای تکراری.
- * Version: 1.5.5
+ * Version: 1.5.6
  * Author: dookht.com
  * Text Domain: wdaa
  * Domain Path: /languages
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! defined( 'WDAA_VERSION' ) ) {
-	define( 'WDAA_VERSION', '1.5.5' );
+	define( 'WDAA_VERSION', '1.5.6' );
 }
 if ( ! defined( 'WDAA_PLUGIN_FILE' ) ) {
 	define( 'WDAA_PLUGIN_FILE', __FILE__ );
