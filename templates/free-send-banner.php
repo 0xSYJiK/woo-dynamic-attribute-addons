@@ -92,5 +92,5 @@ if ( ! defined( 'ABSPATH' ) ) {
 					</defs>
 				</svg>
 	</div>
-	<span class="wdaa-free-send-title"><?php esc_html_e( 'ارسال رایگان برای این کالا', 'wdaa' ); ?></span>
+	<span class="wdaa-free-send-title"><?php esc_html_e( 'ارسال رایگان این کالا', 'wdaa' ); ?></span>
 </div>
