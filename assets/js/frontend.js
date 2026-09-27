@@ -128,6 +128,7 @@
 		$form.addClass('wdaa-has-addons');
 		$('body').addClass('wdaa-has-addons');
 		$form.find('.woocommerce-variation-price, .single_variation .price').addClass('wdaa-hidden').attr('style', 'display: none !important;');
+		relocateSnappPayWidget();
 
 		// 1. Initial Base Price from PHP data-attribute
 		var serverPrice = parseFloat($masterBox.data('base-price'));
@@ -207,6 +208,46 @@
 					} else {
 						$masterBox.insertBefore($resetBtn);
 					}
+				}
+			}
+		}
+
+		// Relocate SnappPay widget to the middle column (under starting price) on addon products
+		function relocateSnappPayWidget() {
+			var $snappWidget = $('.snapppay-widget');
+			if (!$snappWidget.length) {
+				return;
+			}
+
+			// Target 1: Directly after .woocommerce_template_single_price_vip in the middle column
+			var $vipPrice = $('.woocommerce_template_single_price_vip');
+			if ($vipPrice.length) {
+				if (!$snappWidget.prev().is($vipPrice)) {
+					$snappWidget.addClass('wdaa-snapppay-moved').insertAfter($vipPrice);
+				} else {
+					$snappWidget.addClass('wdaa-snapppay-moved');
+				}
+				return;
+			}
+
+			// Target 2: Fallback to middle column container div.max-w-[320px] or col-span-4 a-md:order-2
+			var $middleCol = $('div.max-w-\\[320px\\], div.col-span-4.a-md\\:order-2');
+			if ($middleCol.length) {
+				if (!$snappWidget.parent().is($middleCol)) {
+					$snappWidget.addClass('wdaa-snapppay-moved').appendTo($middleCol);
+				} else {
+					$snappWidget.addClass('wdaa-snapppay-moved');
+				}
+				return;
+			}
+
+			// Target 3: Fallback after starting-price wrapper
+			var $startingPrice = $('.starting-price').closest('div');
+			if ($startingPrice.length) {
+				if (!$snappWidget.prev().is($startingPrice)) {
+					$snappWidget.addClass('wdaa-snapppay-moved').insertAfter($startingPrice);
+				} else {
+					$snappWidget.addClass('wdaa-snapppay-moved');
 				}
 			}
 		}
@@ -447,12 +488,14 @@
 		if (isVariable) {
 			$form.on('wc_variation_form', function () {
 				repositionMasterBox();
+				relocateSnappPayWidget();
 				syncResetButton();
 				updateLivePriceDisplay();
 				$form.find('.woocommerce-variation-price, .single_variation .price').addClass('wdaa-hidden').attr('style', 'display: none !important;');
 			});
 
 			$form.on('show_variation', function (event, variation) {
+				relocateSnappPayWidget();
 				syncResetButton();
 				var $vPrice = $form.find('.woocommerce-variation-price');
 				if ($vPrice.length && !$vPrice.hasClass('wdaa-hidden') && $vPrice[0]) {
@@ -472,6 +515,7 @@
 			});
 
 			$form.on('hide_variation reset_data', function () {
+				relocateSnappPayWidget();
 				syncResetButton();
 				hasValidBasePrice = false;
 				currentBasePrice = 0;
@@ -479,13 +523,16 @@
 				$form.find('.woocommerce-variation-price, .single_variation .price').addClass('wdaa-hidden').attr('style', 'display: none !important;');
 			});
 
-			// Continuously guard against dynamic theme scripts reviving the variation price
+			// Continuously guard against dynamic theme scripts reviving the variation price or moving snapppay back
 			try {
 				if (window.MutationObserver && $form[0]) {
 					var priceObserver = new MutationObserver(function () {
 						var $unhidden = $form.find('.woocommerce-variation-price:not(.wdaa-hidden), .single_variation .price:not(.wdaa-hidden)');
 						if ($unhidden.length) {
 							$unhidden.addClass('wdaa-hidden').attr('style', 'display: none !important;');
+						}
+						if ($('.snapppay-widget:not(.wdaa-snapppay-moved)').length) {
+							relocateSnappPayWidget();
 						}
 					});
 					priceObserver.observe($form[0], { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
@@ -576,8 +623,14 @@
 		// Initial execution
 		repositionMasterBox();
 		ensureBoxInForm();
+		relocateSnappPayWidget();
 		syncResetButton(true);
 		updateLivePriceDisplay(true);
 		$form.find('.woocommerce-variation-price, .single_variation .price').addClass('wdaa-hidden').attr('style', 'display: none !important;');
+
+		// Safety timeouts for late or lazy-loaded widgets
+		setTimeout(relocateSnappPayWidget, 100);
+		setTimeout(relocateSnappPayWidget, 400);
+		setTimeout(relocateSnappPayWidget, 1200);
 	});
 })(jQuery);

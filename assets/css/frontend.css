@@ -673,5 +673,39 @@ tr.woocommerce_reset_variations_link_tr.wdaa-animating-out,
 	}
 }
 
+/* 5. SnappPay Widget Relocation on Addon Product Pages */
+body.wdaa-has-addons .box-price-info-single .snapppay-widget:not(.wdaa-snapppay-moved),
+body.wdaa-has-addons form.cart .snapppay-widget:not(.wdaa-snapppay-moved),
+body.wdaa-has-addons .single_variation_wrap .snapppay-widget:not(.wdaa-snapppay-moved) {
+	display: none !important;
+}
 
+.snapppay-widget.wdaa-snapppay-moved {
+	display: flex !important;
+	margin-top: 14px !important;
+	margin-bottom: 0 !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
+	position: relative !important;
+	z-index: 1 !important;
+	animation: wdaaSnappPayEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
 
+@keyframes wdaaSnappPayEnter {
+	0% {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.snapppay-widget.wdaa-snapppay-moved {
+		animation: none !important;
+		transform: none !important;
+		transition: none !important;
+	}
+}
