@@ -256,33 +256,6 @@
 					$snappWidget.addClass('wdaa-snapppay-moved');
 				}
 			}
-
-			syncSnappPayBannerAlignment();
-		}
-
-		// Synchronize vertical position of SnappPay widget to match Free Send Banner on desktop
-		function syncSnappPayBannerAlignment() {
-			var $snapp = $('.snapppay-widget.wdaa-snapppay-moved');
-			if (!$snapp.length) {
-				return;
-			}
-			if (window.innerWidth < 1200) {
-				$snapp.css('margin-top', '');
-				return;
-			}
-			var $banner = $('#wdaa-free-send-banner');
-			if (!$banner.length || !$banner.is(':visible')) {
-				return;
-			}
-
-			$snapp.css('margin-top', '');
-			var bannerTop = Math.round($banner.offset().top);
-			var snappTop = Math.round($snapp.offset().top);
-			var diff = bannerTop - snappTop;
-			if (diff > 2) {
-				var baseMt = parseFloat($snapp.css('margin-top')) || 14;
-				$snapp.css('margin-top', (baseMt + diff) + 'px');
-			}
 		}
 
 		// Relocate Free Send Banner into Column 1 under "بازخورد درباره این کالا"
@@ -338,7 +311,6 @@
 			}
 
 			$banner.removeClass('wdaa-hidden').addClass('wdaa-banner-placed');
-			syncSnappPayBannerAlignment();
 		}
 
 		// Calculate total extra price from all selected addons
@@ -722,23 +694,19 @@
 		setTimeout(function () {
 			relocateSnappPayWidget();
 			relocateFreeSendBanner();
-			syncSnappPayBannerAlignment();
 		}, 100);
 		setTimeout(function () {
 			relocateSnappPayWidget();
 			relocateFreeSendBanner();
-			syncSnappPayBannerAlignment();
 		}, 400);
 		setTimeout(function () {
 			relocateSnappPayWidget();
 			relocateFreeSendBanner();
-			syncSnappPayBannerAlignment();
 		}, 1200);
 
-		$(window).on('load resize', function () {
+		$(window).on('load', function () {
 			relocateSnappPayWidget();
 			relocateFreeSendBanner();
-			syncSnappPayBannerAlignment();
 		});
 	});
 })(jQuery);

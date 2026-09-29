@@ -740,37 +740,6 @@ body.wdaa-has-addons .single_variation_wrap .snapppay-widget:not(.wdaa-snapppay-
 	z-index: 1;
 }
 
-@media (min-width: 1200px) {
-	/* Align column 1 (free shipping banner) & column 2 (price + snapppay) to the bottom of the grid */
-	body.wdaa-has-addons div[class*="a-md:order-3"],
-	body.wdaa-has-addons div[class*="max-w-[313px]"] {
-		display: flex !important;
-		flex-direction: column !important;
-		height: 100% !important;
-	}
-
-	body.wdaa-has-addons div[class*="a-md:order-2"],
-	body.wdaa-has-addons div[class*="max-w-[320px]"] {
-		display: flex !important;
-		flex-direction: column !important;
-		height: 100% !important;
-	}
-
-	body.wdaa-has-addons div[class*="a-md:order-2"] .woocommerce_template_single_price_vip,
-	body.wdaa-has-addons div[class*="max-w-[320px]"] .woocommerce_template_single_price_vip {
-		margin-top: auto !important;
-		min-height: 64px !important;
-		display: flex !important;
-		flex-direction: column !important;
-		justify-content: center !important;
-	}
-
-	.snapppay-widget.wdaa-snapppay-moved {
-		margin-top: 14px !important;
-		margin-bottom: 16px !important;
-	}
-}
-
 @media (max-width: 1200px) {
 	.snapppay-widget.wdaa-snapppay-moved,
 	body.wdaa-has-addons .snapppay-widget {
