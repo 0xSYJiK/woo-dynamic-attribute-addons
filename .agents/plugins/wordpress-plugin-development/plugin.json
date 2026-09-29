@@ -1,0 +1,8 @@
+{
+  "name": "wordpress-plugin-development",
+  "version": "1.0.0",
+  "description": "Senior WordPress plugin development agent plugin with official WordPress skills, inspection protocols, PHPStan, and safety rules.",
+  "author": {
+    "name": "WordPress / Antigravity"
+  }
+}

@@ -1,0 +1,15 @@
+parameters:
+    level: 5
+    paths:
+        - woo-dynamic-attribute-addons.php
+        - includes/
+        - templates/
+    excludePaths:
+        - .agents/
+        - vendor/
+        - node_modules/
+    ignoreErrors:
+        # WordPress Core & WooCommerce runtime functions and classes when evaluated in isolated environments
+        - '#Function (add_action|add_filter|do_action|apply_filters|wp_.*|esc_.*|absint|sanitize_.*|is_admin|plugin_.*|load_plugin_textdomain|get_option|update_option|delete_transient|get_the_ID|wp_doing_ajax|current_screen|add_meta_boxes|register_setting|add_settings_.*|check_admin_referer|current_user_can|wp_verify_nonce) not found#'
+        - '#Class (WC_.*|WooCommerce|Automattic\\WooCommerce\\.*|WP_.*) not found#'
+        - '#Constant (ABSPATH|WDAA_.*) not found#'
